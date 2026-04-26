@@ -17,6 +17,7 @@ import {
   Book,
   Sprout,
   Users,
+  Map,
 } from "lucide-react";
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
@@ -63,8 +64,25 @@ function AnimatedCounter({
 export default function DashboardPage() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [hoveredStat, setHoveredStat] = useState<number | null>(null);
+  const [dashboardData, setDashboardData] = useState<any>(null);
 
-  const containerVariants = {
+  useEffect(() => {
+    fetch("http://127.0.0.1:8000/api/dashboard")
+      .then((res) => res.json())
+      .then((data) => setDashboardData(data.data))
+      .catch((err) => console.error("Failed to fetch dashboard data", err));
+  }, []);
+
+  const iconMap: { [key: string]: any } = {
+    Droplet,
+    Thermometer,
+    Leaf,
+    Cloud,
+    Sprout,
+    Map
+  };
+
+  const containerVariants: any = {
     hidden: { opacity: 0 },
     visible: {
       opacity: 1,
@@ -75,7 +93,7 @@ export default function DashboardPage() {
     },
   };
 
-  const itemVariants = {
+  const itemVariants: any = {
     hidden: { opacity: 0, y: 20 },
     visible: {
       opacity: 1,
@@ -385,37 +403,8 @@ export default function DashboardPage() {
             initial="hidden"
             animate="visible"
           >
-            {[
-              {
-                label: "Soil Moisture",
-                value: 68,
-                icon: Droplet,
-                color: "primary",
-                trend: "+5%",
-              },
-              {
-                label: "Temperature",
-                value: 28,
-                icon: Thermometer,
-                color: "accent",
-                trend: "+2°C",
-              },
-              {
-                label: "Crop Health",
-                value: 92,
-                icon: Leaf,
-                color: "secondary",
-                trend: "+8%",
-              },
-              {
-                label: "Air Quality",
-                value: 95,
-                icon: Cloud,
-                color: "primary",
-                trend: "+3%",
-              },
-            ].map((stat, idx) => {
-              const Icon = stat.icon;
+            {dashboardData ? dashboardData.quick_stats.map((stat: any, idx: number) => {
+              const Icon = iconMap[stat.icon] || Droplet;
               const colorClasses = {
                 primary:
                   "shadow-primary/30 hover:shadow-primary/50 border-primary/40",
@@ -525,7 +514,15 @@ export default function DashboardPage() {
                   />
                 </motion.div>
               );
-            })}
+            }) : (
+              <div className="col-span-1 md:col-span-2 lg:col-span-4 flex justify-center py-12">
+                <motion.div
+                  animate={{ rotate: 360 }}
+                  transition={{ duration: 2, repeat: Infinity }}
+                  className="w-12 h-12 border-4 border-primary/30 border-t-primary rounded-full"
+                />
+              </div>
+            )}
           </motion.div>
 
           {/* Field Status Section */}
@@ -558,26 +555,7 @@ export default function DashboardPage() {
                 </h3>
 
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                  {[
-                    {
-                      name: "North Field",
-                      status: "Optimal",
-                      progress: 85,
-                      color: "primary",
-                    },
-                    {
-                      name: "South Field",
-                      status: "Monitor",
-                      progress: 72,
-                      color: "accent",
-                    },
-                    {
-                      name: "East Field",
-                      status: "Action Needed",
-                      progress: 45,
-                      color: "destructive",
-                    },
-                  ].map((field, idx) => (
+                  {dashboardData ? dashboardData.field_status.map((field: any, idx: number) => (
                     <motion.div
                       key={field.name}
                       initial={{ opacity: 0, scale: 0.8 }}
@@ -663,7 +641,15 @@ export default function DashboardPage() {
                         </motion.p>
                       </div>
                     </motion.div>
-                  ))}
+                  )) : (
+                    <div className="col-span-1 md:col-span-3 flex justify-center py-12">
+                      <motion.div
+                        animate={{ rotate: 360 }}
+                        transition={{ duration: 2, repeat: Infinity }}
+                        className="w-12 h-12 border-4 border-primary/30 border-t-primary rounded-full"
+                      />
+                    </div>
+                  )}
                 </div>
               </div>
             </motion.div>

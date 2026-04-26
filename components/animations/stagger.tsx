@@ -48,7 +48,7 @@ export function StaggerItem({ children, className = '' }: StaggerItemProps) {
       variants={{
         hidden: { opacity: 0, y: 10 },
         visible: { opacity: 1, y: 0, transition: { duration: 0.5, ease: 'easeOut' } },
-      }}
+      } as any}
       className={className}
     >
       {children}

@@ -20,7 +20,7 @@ const navItems = [
 export function Sidebar({ isOpen = false, onClose }: SidebarProps) {
   const pathname = usePathname();
 
-  const sidebarVariants = {
+  const sidebarVariants: any = {
     hidden: { x: -300, opacity: 0 },
     visible: { x: 0, opacity: 1, transition: { duration: 0.3, ease: 'easeOut' } },
     exit: { x: -300, opacity: 0, transition: { duration: 0.2 } },

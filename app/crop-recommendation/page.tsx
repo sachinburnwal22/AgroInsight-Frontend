@@ -1,9 +1,20 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import { motion } from 'framer-motion';
-import Link from 'next/link';
-import { ArrowLeft, Sprout, TrendingUp, AlertCircle, CheckCircle2, Cloud, Droplet, Soil, DollarSign } from 'lucide-react';
+import { useState, useEffect } from "react";
+import { motion } from "framer-motion";
+import Link from "next/link";
+import {
+  ArrowLeft,
+  Sprout,
+  TrendingUp,
+  AlertCircle,
+  CheckCircle2,
+  Cloud,
+  Droplet,
+  Leaf,
+  DollarSign,
+  Layers
+} from "lucide-react";
 
 interface CropRecommendation {
   name: string;
@@ -15,193 +26,65 @@ interface CropRecommendation {
   marketDemand: string;
   governmentSupport: string;
   reason: string;
+  reason: string;
   emoji: string;
+}
+
+interface BackendCrop {
+  id: number;
+  name: string;
+  water_requirement: number;
+  season: string;
+  why_grown: string;
+  ideal_soil: string;
+  market_demand: string;
+  government_support: string;
+  emoji: string;
+  expected_yield: string;
 }
 
 export default function CropRecommendationPage() {
   const [step, setStep] = useState(1);
-  const [recommendations, setRecommendations] = useState<CropRecommendation[]>([]);
+  const [recommendations, setRecommendations] = useState<CropRecommendation[]>(
+    [],
+  );
   const [loading, setLoading] = useState(false);
 
   const [formData, setFormData] = useState({
-    rainfall: '',
-    soilType: '',
-    landSize: '',
-    region: '',
-    marketAccess: '',
-    budget: '',
-    season: '',
+    rainfall: "",
+    soilType: "",
+    landSize: "",
+    region: "",
+    marketAccess: "",
+    budget: "",
+    season: "",
   });
 
-  const cropDatabase = {
-    'high-rainfall-clay-any': [
-      {
-        name: 'Rice',
-        suitability: 95,
-        rainfall: 150,
-        soilTypes: ['Clay', 'Loamy Clay'],
-        season: 'Monsoon (Jun-Oct)',
-        expectedYield: '50-60 quintals/hectare',
-        marketDemand: 'Very High - Essential commodity',
-        governmentSupport: 'MSP: ₹2100/quintal, PM-KISAN scheme available',
-        reason: 'Thrives in high rainfall and clay soil. Heavy water requirements perfectly match your climate.',
-        emoji: '🍚'
-      },
-      {
-        name: 'Jute',
-        suitability: 85,
-        rainfall: 120,
-        soilTypes: ['Clay', 'Loamy'],
-        season: 'Mar-Jul',
-        expectedYield: '25-30 quintals/hectare',
-        marketDemand: 'High - Industrial demand',
-        governmentSupport: 'Special subsidy in Eastern India, MSP support',
-        reason: 'Excellent for clay soils with high rainfall. Good export potential.',
-        emoji: '🌾'
-      },
-      {
-        name: 'Tea',
-        suitability: 80,
-        rainfall: 180,
-        soilTypes: ['Clay-Loam', 'Acidic'],
-        season: 'Year-round',
-        expectedYield: '2000-2500 kg/hectare',
-        marketDemand: 'High - Global demand',
-        governmentSupport: 'Tea Board support, Export subsidies',
-        reason: 'Requires exactly your climate conditions. Long-term profitable crop.',
-        emoji: '🍵'
-      }
-    ],
-    'high-rainfall-loam-any': [
-      {
-        name: 'Sugarcane',
-        suitability: 90,
-        rainfall: 100,
-        soilTypes: ['Loamy', 'Clay-Loam'],
-        season: 'Dec-May',
-        expectedYield: '80-100 quintals/hectare',
-        marketDemand: 'Very High - Industrial demand',
-        governmentSupport: 'MSP: ₹2900/quintal, Crop insurance available',
-        reason: 'Loamy soil is ideal for sugarcane. High rainfall supports growth.',
-        emoji: '🍬'
-      },
-      {
-        name: 'Coconut',
-        suitability: 85,
-        rainfall: 150,
-        soilTypes: ['Loamy', 'Sandy-Loam'],
-        season: 'Year-round',
-        expectedYield: '60-80 nuts/tree/year',
-        marketDemand: 'Very High - Multiple uses',
-        governmentSupport: 'Coconut Development Board schemes',
-        reason: 'Perfect rainfall and soil conditions. Reliable income source.',
-        emoji: '🥥'
-      }
-    ],
-    'medium-rainfall-sandy-any': [
-      {
-        name: 'Groundnut',
-        suitability: 90,
-        rainfall: 50,
-        soilTypes: ['Sandy', 'Sandy-Loam'],
-        season: 'Jun-Oct',
-        expectedYield: '20-25 quintals/hectare',
-        marketDemand: 'Very High - Oil & food industry',
-        governmentSupport: 'MSP: ₹5900/quintal, Crop insurance',
-        reason: 'Sandy soil is perfect for groundnut cultivation. Drought tolerant.',
-        emoji: '🥜'
-      },
-      {
-        name: 'Jowar',
-        suitability: 88,
-        rainfall: 40,
-        soilTypes: ['Sandy', 'Loamy'],
-        season: 'Jun-Oct',
-        expectedYield: '20-30 quintals/hectare',
-        marketDemand: 'Medium - Animal feed & food',
-        governmentSupport: 'MSP support, Drought resilient crop',
-        reason: 'Extremely drought tolerant. Sandy soil ideal. Low water needs.',
-        emoji: '🌾'
-      },
-      {
-        name: 'Bajra',
-        suitability: 85,
-        rainfall: 35,
-        soilTypes: ['Sandy', 'Sandy-Loam'],
-        season: 'May-Oct',
-        expectedYield: '15-20 quintals/hectare',
-        marketDemand: 'Medium-High - Health food trend',
-        governmentSupport: 'MSP: ₹2350/quintal',
-        reason: 'Highly drought resistant. Perfect for arid sandy soils.',
-        emoji: '🌾'
-      }
-    ],
-    'low-rainfall-sandy-any': [
-      {
-        name: 'Mustard',
-        suitability: 92,
-        rainfall: 35,
-        soilTypes: ['Sandy', 'Well-drained'],
-        season: 'Oct-Mar',
-        expectedYield: '15-20 quintals/hectare',
-        marketDemand: 'Very High - Oil industry',
-        governmentSupport: 'MSP: ₹5900/quintal',
-        reason: 'Perfectly suited for low rainfall. Winter crop for sandy soils.',
-        emoji: '🌱'
-      },
-      {
-        name: 'Gram (Chickpea)',
-        suitability: 88,
-        rainfall: 40,
-        soilTypes: ['Sandy', 'Well-drained'],
-        season: 'Oct-Mar',
-        expectedYield: '18-22 quintals/hectare',
-        marketDemand: 'Very High - Protein source',
-        governmentSupport: 'MSP: ₹5500/quintal, Pulses subsidy',
-        reason: 'Drought tolerant. Enriches soil with nitrogen. Good profitability.',
-        emoji: '🫘'
-      }
-    ],
-    'medium-rainfall-loam-small': [
-      {
-        name: 'Vegetables (Mixed)',
-        suitability: 90,
-        rainfall: 60,
-        soilTypes: ['Loamy', 'Rich organic'],
-        season: 'Year-round',
-        expectedYield: '200-300 quintals/hectare',
-        marketDemand: 'Very High - Daily demand',
-        governmentSupport: 'Horticulture Mission, Per drop more crop',
-        reason: 'Perfect for small holdings. High income potential. Year-round production.',
-        emoji: '🥕'
-      },
-      {
-        name: 'Spices (Turmeric/Chili)',
-        suitability: 85,
-        rainfall: 70,
-        soilTypes: ['Loamy', 'Well-drained'],
-        season: 'Jun-Mar',
-        expectedYield: '25-30 quintals/hectare',
-        marketDemand: 'Very High - Export demand',
-        governmentSupport: 'Spice Board schemes, Export subsidies',
-        reason: 'Small plots ideal for spice farming. High value crops. Premium prices.',
-        emoji: '🌶️'
-      }
-    ],
-  };
+  const [allCrops, setAllCrops] = useState<BackendCrop[]>([]);
+
+  useEffect(() => {
+    fetch("http://127.0.0.1:8000/api/crops")
+      .then((res) => res.json())
+      .then((data) => {
+        setAllCrops(data.data);
+      })
+      .catch((err) => console.error("Failed to fetch crops", err));
+  }, []);
 
   const getSoilLabel = (soilType: string) => {
     const soilMap: { [key: string]: string } = {
-      'clay': 'Clay',
-      'loam': 'Loamy',
-      'sandy': 'Sandy',
-      'sandy-loam': 'Sandy-Loam',
-      'clay-loam': 'Clay-Loam',
+      clay: "Clay",
+      loam: "Loamy",
+      sandy: "Sandy",
+      "sandy-loam": "Sandy-Loam",
+      "clay-loam": "Clay-Loam",
     };
     return soilMap[soilType] || soilType;
   };
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+  const handleInputChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>,
+  ) => {
     setFormData({
       ...formData,
       [e.target.name]: e.target.value,
@@ -210,27 +93,45 @@ export default function CropRecommendationPage() {
 
   const generateRecommendations = () => {
     setLoading(true);
-    
-    // Determine rainfall category
+
     const rainfallNum = parseInt(formData.rainfall) || 0;
-    let rainfallCategory = '';
-    if (rainfallNum >= 150) rainfallCategory = 'high-rainfall';
-    else if (rainfallNum >= 60) rainfallCategory = 'medium-rainfall';
-    else rainfallCategory = 'low-rainfall';
+    const soilInput = getSoilLabel(formData.soilType).toLowerCase();
 
-    // Build key for crop database
-    const soilCategory = formData.soilType;
-    const sizeCategory = parseInt(formData.landSize) <= 2 ? 'small' : 'any';
-    const key = `${rainfallCategory}-${soilCategory}-${sizeCategory}`;
-
-    const alternativeKey = `${rainfallCategory}-${soilCategory}-any`;
-    
     setTimeout(() => {
-      const crops = (cropDatabase as any)[key] || (cropDatabase as any)[alternativeKey] || [];
-      
-      const sortedCrops = crops.sort((a: CropRecommendation, b: CropRecommendation) => 
-        b.suitability - a.suitability
-      );
+      // Dynamically score and map backend crops to recommendations
+      const scoredCrops = allCrops.map((crop) => {
+        let score = 50; // Base score
+        
+        // Rainfall match (closer is better)
+        const rainDiff = Math.abs(crop.water_requirement - rainfallNum);
+        if (rainDiff < 200) score += 30;
+        else if (rainDiff < 500) score += 15;
+        
+        // Soil match
+        if (crop.ideal_soil && crop.ideal_soil.toLowerCase().includes(soilInput)) {
+          score += 20;
+        }
+
+        score = Math.min(99, Math.max(10, score));
+
+        return {
+          name: crop.name,
+          suitability: score,
+          rainfall: crop.water_requirement,
+          soilTypes: [crop.ideal_soil || "Various"],
+          season: crop.season || "Various",
+          expectedYield: crop.expected_yield || "Varies",
+          marketDemand: crop.market_demand || "High",
+          governmentSupport: crop.government_support || "Standard schemes apply",
+          reason: crop.why_grown || "Fits the general climate and soil profile.",
+          emoji: crop.emoji || "🌱",
+        };
+      });
+
+      // Sort by suitability and take top 3
+      const sortedCrops = scoredCrops
+        .sort((a, b) => b.suitability - a.suitability)
+        .slice(0, 3);
 
       setRecommendations(sortedCrops);
       setLoading(false);
@@ -238,7 +139,7 @@ export default function CropRecommendationPage() {
     }, 1500);
   };
 
-  const containerVariants = {
+  const containerVariants: any = {
     hidden: { opacity: 0 },
     visible: {
       opacity: 1,
@@ -249,12 +150,12 @@ export default function CropRecommendationPage() {
     },
   };
 
-  const itemVariants = {
+  const itemVariants: any = {
     hidden: { opacity: 0, y: 20 },
     visible: {
       opacity: 1,
       y: 0,
-      transition: { duration: 0.6, ease: 'easeOut' },
+      transition: { duration: 0.6, ease: "easeOut" },
     },
   };
 
@@ -295,7 +196,10 @@ export default function CropRecommendationPage() {
                   <Sprout className="w-8 h-8 text-primary" />
                   Find Your Perfect Crop
                 </h2>
-                <p className="text-muted-foreground">Answer a few questions about your farm conditions to get personalized crop recommendations</p>
+                <p className="text-muted-foreground">
+                  Answer a few questions about your farm conditions to get
+                  personalized crop recommendations
+                </p>
               </motion.div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
@@ -313,13 +217,15 @@ export default function CropRecommendationPage() {
                     onChange={handleInputChange}
                     className="w-full bg-muted/50 border border-border rounded-lg px-4 py-3 text-foreground placeholder-muted-foreground focus:outline-none focus:border-primary transition-colors"
                   />
-                  <p className="text-xs text-muted-foreground mt-2">Low: &lt;50mm | Medium: 50-150mm | High: &gt;150mm</p>
+                  <p className="text-xs text-muted-foreground mt-2">
+                    Low: &lt;50mm | Medium: 50-150mm | High: &gt;150mm
+                  </p>
                 </motion.div>
 
                 {/* Soil Type */}
                 <motion.div variants={itemVariants}>
                   <label className="block text-sm font-semibold mb-3 flex items-center gap-2">
-                    <Soil className="w-4 h-4 text-primary" />
+                    <Layers className="w-4 h-4 text-primary" />
                     Soil Type
                   </label>
                   <select
@@ -339,7 +245,9 @@ export default function CropRecommendationPage() {
 
                 {/* Land Size */}
                 <motion.div variants={itemVariants}>
-                  <label className="block text-sm font-semibold mb-3">Land Size (hectares)</label>
+                  <label className="block text-sm font-semibold mb-3">
+                    Land Size (hectares)
+                  </label>
                   <input
                     type="number"
                     name="landSize"
@@ -352,7 +260,9 @@ export default function CropRecommendationPage() {
 
                 {/* Region */}
                 <motion.div variants={itemVariants}>
-                  <label className="block text-sm font-semibold mb-3">Region</label>
+                  <label className="block text-sm font-semibold mb-3">
+                    Region
+                  </label>
                   <select
                     name="region"
                     value={formData.region}
@@ -390,7 +300,9 @@ export default function CropRecommendationPage() {
 
                 {/* Budget */}
                 <motion.div variants={itemVariants}>
-                  <label className="block text-sm font-semibold mb-3">Investment Budget (₹)</label>
+                  <label className="block text-sm font-semibold mb-3">
+                    Investment Budget (₹)
+                  </label>
                   <select
                     name="budget"
                     value={formData.budget}
@@ -424,8 +336,13 @@ export default function CropRecommendationPage() {
               animate="visible"
             >
               <motion.div variants={itemVariants} className="mb-8">
-                <h2 className="text-3xl font-bold mb-2">Recommended Crops for Your Farm</h2>
-                <p className="text-muted-foreground">Based on rainfall: {formData.rainfall}mm, Soil: {getSoilLabel(formData.soilType)}, Land: {formData.landSize}ha</p>
+                <h2 className="text-3xl font-bold mb-2">
+                  Recommended Crops for Your Farm
+                </h2>
+                <p className="text-muted-foreground">
+                  Based on rainfall: {formData.rainfall}mm, Soil:{" "}
+                  {getSoilLabel(formData.soilType)}, Land: {formData.landSize}ha
+                </p>
               </motion.div>
 
               {loading ? (
@@ -450,34 +367,58 @@ export default function CropRecommendationPage() {
                           <div className="flex items-center gap-4">
                             <motion.div
                               className="text-5xl"
-                              animate={{ rotate: [0, -10, 10, 0], scale: [1, 1.1, 1] }}
-                              transition={{ duration: 2, repeat: Infinity, delay: idx * 0.1 }}
+                              animate={{
+                                rotate: [0, -10, 10, 0],
+                                scale: [1, 1.1, 1],
+                              }}
+                              transition={{
+                                duration: 2,
+                                repeat: Infinity,
+                                delay: idx * 0.1,
+                              }}
                             >
                               {crop.emoji}
                             </motion.div>
                             <div>
-                              <h3 className="text-2xl font-bold">{crop.name}</h3>
-                              <p className="text-muted-foreground">Rank #{idx + 1}</p>
+                              <h3 className="text-2xl font-bold">
+                                {crop.name}
+                              </h3>
+                              <p className="text-muted-foreground">
+                                Rank #{idx + 1}
+                              </p>
                             </div>
                           </div>
                           <motion.div
                             className="text-right"
                             animate={{ scale: [1, 1.05, 1] }}
-                            transition={{ duration: 2, repeat: Infinity, delay: idx * 0.1 }}
+                            transition={{
+                              duration: 2,
+                              repeat: Infinity,
+                              delay: idx * 0.1,
+                            }}
                           >
-                            <div className="text-3xl font-bold text-primary">{crop.suitability}%</div>
-                            <p className="text-xs text-muted-foreground">Suitability</p>
+                            <div className="text-3xl font-bold text-primary">
+                              {crop.suitability}%
+                            </div>
+                            <p className="text-xs text-muted-foreground">
+                              Suitability
+                            </p>
                           </motion.div>
                         </div>
                       </div>
 
                       <div className="px-8 py-6 space-y-4">
                         <div className="bg-muted/30 rounded-lg p-4 border border-border/50">
-                          <p className="text-sm leading-relaxed"><strong>Why this crop?</strong> {crop.reason}</p>
+                          <p className="text-sm leading-relaxed">
+                            <strong>Why this crop?</strong> {crop.reason}
+                          </p>
                         </div>
 
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                          <motion.div whileHover={{ scale: 1.05 }} className="bg-muted/30 rounded-lg p-4 border border-border/50">
+                          <motion.div
+                            whileHover={{ scale: 1.05 }}
+                            className="bg-muted/30 rounded-lg p-4 border border-border/50"
+                          >
                             <p className="text-xs text-muted-foreground mb-1 flex items-center gap-2">
                               <Droplet className="w-4 h-4 text-accent" />
                               Required Rainfall
@@ -485,38 +426,67 @@ export default function CropRecommendationPage() {
                             <p className="font-semibold">{crop.rainfall}mm+</p>
                           </motion.div>
 
-                          <motion.div whileHover={{ scale: 1.05 }} className="bg-muted/30 rounded-lg p-4 border border-border/50">
+                          <motion.div
+                            whileHover={{ scale: 1.05 }}
+                            className="bg-muted/30 rounded-lg p-4 border border-border/50"
+                          >
                             <p className="text-xs text-muted-foreground mb-1 flex items-center gap-2">
-                              <Soil className="w-4 h-4 text-primary" />
+                              <Leaf className="w-4 h-4 text-primary" />
                               Ideal Soil Types
                             </p>
-                            <p className="font-semibold">{crop.soilTypes.join(', ')}</p>
+                            <p className="font-semibold">
+                              {crop.soilTypes.join(", ")}
+                            </p>
                           </motion.div>
 
-                          <motion.div whileHover={{ scale: 1.05 }} className="bg-muted/30 rounded-lg p-4 border border-border/50">
-                            <p className="text-xs text-muted-foreground mb-1">Harvest Season</p>
-                            <p className="font-semibold text-sm">{crop.season}</p>
+                          <motion.div
+                            whileHover={{ scale: 1.05 }}
+                            className="bg-muted/30 rounded-lg p-4 border border-border/50"
+                          >
+                            <p className="text-xs text-muted-foreground mb-1">
+                              Harvest Season
+                            </p>
+                            <p className="font-semibold text-sm">
+                              {crop.season}
+                            </p>
                           </motion.div>
 
-                          <motion.div whileHover={{ scale: 1.05 }} className="bg-muted/30 rounded-lg p-4 border border-border/50">
+                          <motion.div
+                            whileHover={{ scale: 1.05 }}
+                            className="bg-muted/30 rounded-lg p-4 border border-border/50"
+                          >
                             <p className="text-xs text-muted-foreground mb-1 flex items-center gap-2">
                               <TrendingUp className="w-4 h-4 text-accent" />
                               Expected Yield
                             </p>
-                            <p className="font-semibold text-sm">{crop.expectedYield}</p>
+                            <p className="font-semibold text-sm">
+                              {crop.expectedYield}
+                            </p>
                           </motion.div>
 
-                          <motion.div whileHover={{ scale: 1.05 }} className="md:col-span-2 bg-muted/30 rounded-lg p-4 border border-border/50">
-                            <p className="text-xs text-muted-foreground mb-1">Market Demand</p>
-                            <p className="font-semibold text-sm">{crop.marketDemand}</p>
+                          <motion.div
+                            whileHover={{ scale: 1.05 }}
+                            className="md:col-span-2 bg-muted/30 rounded-lg p-4 border border-border/50"
+                          >
+                            <p className="text-xs text-muted-foreground mb-1">
+                              Market Demand
+                            </p>
+                            <p className="font-semibold text-sm">
+                              {crop.marketDemand}
+                            </p>
                           </motion.div>
 
-                          <motion.div whileHover={{ scale: 1.05 }} className="md:col-span-2 bg-primary/10 rounded-lg p-4 border border-primary/40">
+                          <motion.div
+                            whileHover={{ scale: 1.05 }}
+                            className="md:col-span-2 bg-primary/10 rounded-lg p-4 border border-primary/40"
+                          >
                             <p className="text-xs text-muted-foreground mb-1 flex items-center gap-2">
                               <CheckCircle2 className="w-4 h-4 text-primary" />
                               Government Support
                             </p>
-                            <p className="font-semibold text-sm">{crop.governmentSupport}</p>
+                            <p className="font-semibold text-sm">
+                              {crop.governmentSupport}
+                            </p>
                           </motion.div>
                         </div>
                       </div>
@@ -532,13 +502,13 @@ export default function CropRecommendationPage() {
                 onClick={() => {
                   setStep(1);
                   setFormData({
-                    rainfall: '',
-                    soilType: '',
-                    landSize: '',
-                    region: '',
-                    marketAccess: '',
-                    budget: '',
-                    season: '',
+                    rainfall: "",
+                    soilType: "",
+                    landSize: "",
+                    region: "",
+                    marketAccess: "",
+                    budget: "",
+                    season: "",
                   });
                 }}
                 className="mt-8 w-full px-8 py-4 rounded-lg border-2 border-primary text-primary font-bold text-lg hover:bg-primary/10 transition-all duration-300"

@@ -18,7 +18,7 @@ export default function SettingsPage() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
 
-  const settingsSections = [
+  const settingsSections: any[] = [
     {
       title: 'Profile Settings',
       icon: User,
@@ -109,7 +109,7 @@ export default function SettingsPage() {
 
                   {/* Settings Items */}
                   <div className="space-y-4">
-                    {section.settings.map((setting, settingIndex) => (
+                    {section.settings.map((setting: any, settingIndex: number) => (
                       <motion.div
                         key={setting.label}
                         initial={{ opacity: 0 }}

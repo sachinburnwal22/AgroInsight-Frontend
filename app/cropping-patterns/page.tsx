@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import {
   ChevronDown,
@@ -28,7 +28,7 @@ export default function CroppingPatternsPage() {
   );
   const [selectedFilter, setSelectedFilter] = useState<string>("all");
 
-  const containerVariants = {
+  const containerVariants: any = {
     hidden: { opacity: 0 },
     visible: {
       opacity: 1,
@@ -39,173 +39,30 @@ export default function CroppingPatternsPage() {
     },
   };
 
-  const itemVariants = {
+  const itemVariants: any = {
     hidden: { opacity: 0, y: 20 },
     visible: {
       opacity: 1,
       y: 0,
-      transition: { duration: 0.6, ease: "easeOut" },
+      transition: { duration: 0.6, ease: [0.22, 1, 0.36, 1] },
     },
   };
 
-  const croppingData = {
-    "north-india": {
-      region: "North India (Punjab, Haryana, Western UP)",
-      rainfall: "400-900 mm",
-      season: "Rabi Season (Oct-March)",
-      primaryCrops: [
-        {
-          name: "Wheat",
-          whyGrown:
-            "Staple food crop with high demand; minimum support price ensures stable income",
-          rainfall:
-            "Requires 300-500 mm; suited to region's winter precipitation",
-          soil: "Alluvial & loamy soils are ideal for wheat cultivation",
-          marketDemand:
-            "High domestic demand + export potential; food security focus",
-          govPolicy:
-            "MSP (Minimum Support Price) guaranteed by Government of India",
-        },
-        {
-          name: "Rice",
-          whyGrown:
-            "Primary staple food; water availability supports cultivation",
-          rainfall: "1000-2250 mm required; supplemented by canal irrigation",
-          soil: "Loamy & clayey soils; good water retention capacity",
-          marketDemand: "Essential commodity with consistent domestic demand",
-          govPolicy:
-            "Assured procurement by government through FCI (Food Corporation of India)",
-        },
-        {
-          name: "Cotton",
-          whyGrown: "Cash crop providing higher income than cereals",
-          rainfall: "Requires 600-1000 mm; well-distributed rainfall essential",
-          soil: "Black & loamy soils; moderate fertility requirements",
-          marketDemand:
-            "Strong textile industry demand + international markets",
-          govPolicy:
-            "Guaranteed price through government monopoly procurement scheme",
-        },
-      ],
-    },
-    "central-india": {
-      region: "Central India (Madhya Pradesh, Chhattisgarh)",
-      rainfall: "900-1400 mm",
-      season: "Kharif Season (June-October)",
-      primaryCrops: [
-        {
-          name: "Soybean",
-          whyGrown:
-            "Emerging cash crop with high protein content and export potential",
-          rainfall: "700-1000 mm; ideal for monsoon rains of region",
-          soil: "Well-drained black soils; nitrogen-fixing properties benefit soil health",
-          marketDemand: "Growing domestic demand + significant export markets",
-          govPolicy:
-            "Included in ISOPOM (Integrated Scheme of Oilseeds, Pulses, Maize)",
-        },
-        {
-          name: "Pulses (Chickpea, Lentil)",
-          whyGrown:
-            "Protein source for population; enriches soil with nitrogen",
-          rainfall:
-            "Rainfed cultivation possible; drought tolerant varieties available",
-          soil: "Black soils ideal; low fertility soils suitable for pulse cultivation",
-          marketDemand:
-            "Essential protein source; vegetarian population demand",
-          govPolicy:
-            "MSP support; part of NFSM (National Food Security Mission)",
-        },
-        {
-          name: "Sugarcane",
-          whyGrown:
-            "High-value cash crop; industrial demand for sugar production",
-          rainfall: "1500-2250 mm required; significant water inputs needed",
-          soil: "Deep loamy & clayey soils with good water-holding capacity",
-          marketDemand: "Sugar industry + ethanol production emerging use",
-          govPolicy:
-            "Assured prices by sugar mills; cooperative support systems",
-        },
-      ],
-    },
-    "south-india": {
-      region: "South India (Tamil Nadu, Karnataka, Telangana)",
-      rainfall: "600-1600 mm",
-      season: "Rabi & Kharif (Year-round cultivation)",
-      primaryCrops: [
-        {
-          name: "Groundnut",
-          whyGrown:
-            "Oil-rich crop; drought tolerant; excellent for region's climate",
-          rainfall: "400-600 mm; one of most drought-tolerant crops",
-          soil: "Light & sandy loams; good drainage prevents waterlogging",
-          marketDemand:
-            "Oil extraction + food industry; international export market",
-          govPolicy: "ISOPOM scheme support for oilseed promotion",
-        },
-        {
-          name: "Coffee",
-          whyGrown: "Premium plantation crop; high value per hectare",
-          rainfall: "1500-2500 mm; altitude-dependent cultivation (1000-2000m)",
-          soil: "Well-drained latosols & volcanic soils; rich organic matter",
-          marketDemand:
-            "International market; premium pricing for specialty varieties",
-          govPolicy:
-            "Export promotion through Agricultural & Processed Food Products Export Development Authority",
-        },
-        {
-          name: "Spices (Turmeric, Pepper)",
-          whyGrown: "High-value horticulture; global demand for Indian spices",
-          rainfall:
-            "Varies by spice; generally 1500-2250 mm for optimal growth",
-          soil: "Well-drained loamy & laterite soils",
-          marketDemand:
-            "Global demand; India world's largest producer & exporter",
-          govPolicy:
-            "MIDH (Mission for Integrated Development of Horticulture) support",
-        },
-      ],
-    },
-    "east-india": {
-      region: "East India (West Bengal, Assam, Odisha)",
-      rainfall: "1600-2300 mm",
-      season: "Kharif Dominant",
-      primaryCrops: [
-        {
-          name: "Rice",
-          whyGrown: "Region's primary staple; abundant water availability",
-          rainfall: "1400-2300 mm; monsoon supports rice cultivation",
-          soil: "Alluvial & clayey soils with high water retention",
-          marketDemand:
-            "Staple food; region's dietary essential; export potential",
-          govPolicy:
-            "BGREI (Bringing Green Revolution to Eastern India) program support",
-        },
-        {
-          name: "Jute",
-          whyGrown:
-            "Traditional crop; ecological importance; natural fiber demand",
-          rainfall: "1400-2250 mm; humidity essential for fiber quality",
-          soil: "Loamy & clayey alluvial soils; prone to flooding tolerated",
-          marketDemand:
-            "Eco-friendly alternative to synthetic fibers; burlap bags demand",
-          govPolicy: "Ministry support for sustainable natural fiber promotion",
-        },
-        {
-          name: "Tea",
-          whyGrown: "Premium plantation crop; climate perfectly suited",
-          rainfall: "1500-2250 mm; distributed rainfall essential",
-          soil: "Well-drained laterite soils; acidic soils ideal",
-          marketDemand:
-            "Global beverage market; India world's largest tea producer",
-          govPolicy: "Tea Board support; export promotion initiatives",
-        },
-      ],
-    },
-  };
+  const [regionsData, setRegionsData] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const regionKeys = Object.keys(croppingData) as Array<
-    keyof typeof croppingData
-  >;
+  useEffect(() => {
+    fetch("http://127.0.0.1:8000/api/regions")
+      .then((res) => res.json())
+      .then((data) => {
+        setRegionsData(data.data);
+        setLoading(false);
+      })
+      .catch((err) => {
+        console.error("Failed to fetch regions", err);
+        setLoading(false);
+      });
+  }, []);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background to-[#0f0f2e] text-foreground overflow-hidden">
@@ -418,8 +275,16 @@ export default function CroppingPatternsPage() {
             animate="visible"
             className="space-y-6"
           >
-            {regionKeys.map((regionKey, idx) => {
-              const region = croppingData[regionKey];
+            {loading ? (
+              <div className="flex justify-center py-12">
+                <motion.div
+                  animate={{ rotate: 360 }}
+                  transition={{ duration: 2, repeat: Infinity }}
+                  className="w-12 h-12 border-4 border-primary/30 border-t-primary rounded-full"
+                />
+              </div>
+            ) : regionsData.map((region, idx) => {
+              const regionKey = region.key;
               const isExpanded = expandedRegion === regionKey;
 
               return (
@@ -446,12 +311,12 @@ export default function CroppingPatternsPage() {
                           </motion.div>
                           <div>
                             <h2 className="text-2xl font-bold mb-1">
-                              {region.region}
+                              {region.name}
                             </h2>
                             <div className="flex gap-6 text-sm text-muted-foreground flex-wrap">
                               <span className="flex items-center gap-1">
                                 <Cloud className="w-4 h-4 text-accent" />
-                                Rainfall: {region.rainfall}
+                                Rainfall: {region.rainfall_range}
                               </span>
                               <span className="flex items-center gap-1">
                                 <Leaf className="w-4 h-4 text-primary" />
@@ -479,7 +344,10 @@ export default function CroppingPatternsPage() {
                         className="mt-6 overflow-hidden"
                       >
                         <div className="space-y-4 pt-6 border-t border-border/50">
-                          {region.primaryCrops.map((crop, cropIdx) => (
+                          {region.cropping_patterns?.map((pattern: any, cropIdx: number) => {
+                            const crop = pattern.crop;
+                            if (!crop) return null;
+                            return (
                             <motion.div
                               key={crop.name}
                               initial={{ opacity: 0, y: 10 }}
@@ -496,7 +364,7 @@ export default function CroppingPatternsPage() {
                                   animate={{ rotate: [0, 360] }}
                                   transition={{ duration: 4, repeat: Infinity }}
                                 >
-                                  🌾
+                                  {crop.emoji || '🌾'}
                                 </motion.span>
                                 {crop.name}
                               </h3>
@@ -508,7 +376,7 @@ export default function CroppingPatternsPage() {
                                       Why Grown Here
                                     </p>
                                     <p className="text-foreground text-sm">
-                                      {crop.whyGrown}
+                                      {crop.why_grown}
                                     </p>
                                   </div>
 
@@ -518,7 +386,7 @@ export default function CroppingPatternsPage() {
                                       Requirements
                                     </p>
                                     <p className="text-foreground text-sm">
-                                      {crop.rainfall}
+                                      {crop.water_requirement} mm
                                     </p>
                                   </div>
                                 </div>
@@ -529,7 +397,7 @@ export default function CroppingPatternsPage() {
                                       Soil Type
                                     </p>
                                     <p className="text-foreground text-sm">
-                                      {crop.soil}
+                                      {crop.ideal_soil}
                                     </p>
                                   </div>
 
@@ -538,7 +406,7 @@ export default function CroppingPatternsPage() {
                                       Market Demand
                                     </p>
                                     <p className="text-foreground text-sm">
-                                      {crop.marketDemand}
+                                      {crop.market_demand}
                                     </p>
                                   </div>
                                 </div>
@@ -559,11 +427,11 @@ export default function CroppingPatternsPage() {
                                   Policy
                                 </p>
                                 <p className="text-foreground text-sm">
-                                  {crop.govPolicy}
+                                  {crop.government_support}
                                 </p>
                               </motion.div>
                             </motion.div>
-                          ))}
+                          )})}
                         </div>
                       </motion.div>
                     </div>
