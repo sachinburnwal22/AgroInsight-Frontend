@@ -61,20 +61,23 @@ export default function MapSection() {
         whileInView={{ opacity: 1, y: 0 }}
         viewport={{ once: true }}
         transition={{ duration: 0.6 }}
-        className="mb-8"
+        className="mb-10 text-center"
       >
-        <h2 className="text-3xl font-bold text-foreground mb-2 flex items-center gap-3">
-          <span className="text-primary text-4xl">🗺️</span> India Agricultural Map
+        <h2 className="text-4xl md:text-5xl font-extrabold text-foreground mb-4 flex items-center justify-center gap-4">
+          <span className="text-5xl drop-shadow-lg">🗺️</span> 
+          <span className="bg-clip-text text-transparent bg-gradient-to-r from-emerald-400 via-teal-400 to-cyan-500">
+            India Agricultural Map
+          </span>
         </h2>
-        <p className="text-muted-foreground text-lg max-w-2xl">
+        <p className="text-muted-foreground/80 text-lg max-w-2xl mx-auto font-light leading-relaxed">
           Explore land holding, irrigation, and cropping patterns across different states. 
-          Click on any state to view detailed insights.
+          <span className="text-foreground/80 font-medium ml-1">Click on any state</span> to view detailed insights.
         </p>
       </motion.div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 h-auto lg:h-[600px]">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 bg-background/30 backdrop-blur-3xl p-4 lg:p-6 rounded-[2.5rem] border border-white/5 shadow-2xl h-auto">
         {/* Map Container - Takes up 2/3 of space on large screens */}
-        <div className="lg:col-span-2 h-[500px] lg:h-full relative z-0">
+        <div className="lg:col-span-2 h-[500px] lg:h-[600px] relative z-0">
           <InteractiveMap
             selectedState={selectedState}
             onStateClick={(stateName) => setSelectedState(stateName)}
@@ -82,7 +85,7 @@ export default function MapSection() {
         </div>
 
         {/* Side Panel - Takes up 1/3 of space */}
-        <div className="lg:col-span-1 h-[500px] lg:h-full z-10">
+        <div className="lg:col-span-1 h-[500px] lg:h-[600px] z-10">
           <InfoPanel
             loading={loading}
             regionData={regionData}

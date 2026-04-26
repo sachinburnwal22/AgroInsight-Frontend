@@ -23,6 +23,13 @@ import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import MapSection from "@/components/map/MapSection";
 import Link from "next/link";
+import axios from "axios";
+import dynamic from "next/dynamic";
+
+const WeatherMiniMap = dynamic(
+  () => import("@/components/map/WeatherMiniMap"),
+  { ssr: false }
+);
 
 // Animated Counter Component
 function AnimatedCounter({
@@ -66,6 +73,96 @@ export default function DashboardPage() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [hoveredStat, setHoveredStat] = useState<number | null>(null);
   const [dashboardData, setDashboardData] = useState<any>(null);
+
+  // Gemini Quick Actions State
+  const [activeAction, setActiveAction] = useState<string | null>(null);
+  const [actionResponse, setActionResponse] = useState<string | null>(null);
+  const [loadingAction, setLoadingAction] = useState(false);
+
+  // Form states for Quick Actions
+  const [formData, setFormData] = useState({
+    region: "Maharashtra",
+    crop: "Wheat",
+    date: "",
+    ph: "",
+    moisture: "53",
+    irrigationThreshold: "40",
+    tempThreshold: "35",
+    reportType: "Weekly Summary"
+  });
+
+  const [weatherData, setWeatherData] = useState<any>(null);
+
+  const handleActionClick = (actionLabel: string) => {
+    setActiveAction(actionLabel);
+    setActionResponse(null);
+    setWeatherData(null);
+    setLoadingAction(false);
+  };
+
+  const submitAction = async (actionLabel: string) => {
+    setLoadingAction(true);
+    setActionResponse(null);
+
+    try {
+      let endpoint = "";
+      let payload = {};
+
+      switch (actionLabel) {
+        case "Start Irrigation":
+          endpoint = "/api/irrigation/start";
+          payload = { 
+            region: formData.region || "Global", 
+            irrigation: formData.moisture || dashboardData?.quick_stats?.[0]?.value || 50,
+            crop: formData.crop
+          };
+          break;
+        case "Schedule Spraying":
+          endpoint = "/api/spraying/schedule";
+          payload = { crop: formData.crop, date: formData.date };
+          break;
+        case "Check Soil pH":
+          endpoint = "/api/soil/analyze";
+          payload = { ph: formData.ph };
+          break;
+        case "View Weather":
+          endpoint = "/api/weather/view";
+          payload = { region: formData.region };
+          break;
+        case "Generate Report":
+          endpoint = "/api/report/generate";
+          payload = { region: formData.region, report_type: formData.reportType, data: dashboardData };
+          break;
+        case "Alert Settings":
+          endpoint = "/api/alerts";
+          payload = { 
+            irrigation_threshold: formData.irrigationThreshold, 
+            temperature_threshold: formData.tempThreshold 
+          };
+          break;
+      }
+
+      const res = await axios.post(`http://127.0.0.1:8000${endpoint}`, payload);
+      
+      // Parse specific responses
+      if (actionLabel === "Check Soil pH" && res.data.soil_type) {
+        setActionResponse(`**Soil Type:** ${res.data.soil_type}\n\n**Recommendation:**\n${res.data.recommendation}\n\n**Suggested Crops:** ${(res.data.suggested_crops || []).join(", ")}`);
+      } else if (actionLabel === "View Weather" && res.data.temp) {
+        setWeatherData(res.data);
+        setActionResponse(`**Temperature:** ${res.data.temp}°C\n**Humidity:** ${res.data.humidity}%\n**Wind Speed:** ${res.data.wind_speed} km/h\n**Rain Chance:** ${res.data.rain_chance}%\n\n**AI Advice:**\n${res.data.advice}`);
+      } else if (actionLabel === "Generate Report" && res.data.summary) {
+        setActionResponse(`**Summary:**\n${res.data.summary}\n\n**Issues:**\n${res.data.issues}\n\n**Recommendations:**\n${res.data.recommendations}`);
+      } else if (res.data.ai_suggestion) {
+        setActionResponse(res.data.ai_suggestion);
+      } else {
+        setActionResponse(res.data.message || JSON.stringify(res.data));
+      }
+    } catch (err: any) {
+      setActionResponse("Error: " + (err.response?.data?.message || err.message));
+    } finally {
+      setLoadingAction(false);
+    }
+  };
 
   useEffect(() => {
     fetch("http://127.0.0.1:8000/api/dashboard")
@@ -683,6 +780,7 @@ export default function DashboardPage() {
                 { label: "Alert Settings", icon: "🔔", color: "destructive" },
               ].map((action, idx) => (
                 <motion.button
+                  onClick={() => handleActionClick(action.label)}
                   key={action.label}
                   variants={itemVariants}
                   whileHover={{ scale: 1.05, y: -5 }}
@@ -958,6 +1056,263 @@ export default function DashboardPage() {
           </motion.div>
         </div>
       </main>
+
+      {/* Gemini AI Quick Action Modal */}
+      {activeAction && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          {/* Backdrop */}
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+            onClick={() => setActiveAction(null)}
+          />
+          
+          {/* Modal Content */}
+          <motion.div
+            initial={{ scale: 0.9, opacity: 0, y: 20 }}
+            animate={{ scale: 1, opacity: 1, y: 0 }}
+            className="relative w-full max-w-2xl bg-background/80 border border-white/10 rounded-3xl shadow-2xl p-8 backdrop-blur-2xl overflow-hidden"
+          >
+            <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-accent/5 pointer-events-none" />
+            
+            <button
+              onClick={() => setActiveAction(null)}
+              className="absolute top-6 right-6 w-8 h-8 flex items-center justify-center rounded-full bg-white/5 hover:bg-white/10 transition-colors z-10"
+            >
+              <X className="w-4 h-4" />
+            </button>
+
+            <h3 className="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-primary to-accent mb-6 flex items-center gap-3">
+              <span className="text-3xl text-foreground">✨</span> AI Assistant: {activeAction}
+            </h3>
+
+            <div className="min-h-[150px] max-h-[60vh] overflow-y-auto custom-scrollbar relative pr-2">
+              {/* Specialized Form Inputs */}
+              {!loadingAction && !actionResponse && (
+                <div className="mb-6 space-y-4">
+                  {activeAction === "Start Irrigation" && (
+                    <div className="grid gap-4">
+                      <div>
+                        <label className="block text-sm font-medium text-muted-foreground mb-1">Select Region</label>
+                        <select 
+                          value={formData.region}
+                          onChange={(e) => setFormData({...formData, region: e.target.value})}
+                          className="w-full bg-background/50 border border-border rounded-lg p-3 text-foreground focus:ring-2 focus:ring-primary outline-none"
+                        >
+                          <option>Maharashtra</option>
+                          <option>Punjab</option>
+                          <option>Uttar Pradesh</option>
+                          <option>Madhya Pradesh</option>
+                          <option>Karnataka</option>
+                        </select>
+                      </div>
+                      <div className="grid grid-cols-2 gap-4">
+                        <div>
+                          <label className="block text-sm font-medium text-muted-foreground mb-1">Crop Type</label>
+                          <select 
+                            value={formData.crop}
+                            onChange={(e) => setFormData({...formData, crop: e.target.value})}
+                            className="w-full bg-background/50 border border-border rounded-lg p-3 text-foreground focus:ring-2 focus:ring-primary outline-none"
+                          >
+                            <option>Wheat</option>
+                            <option>Rice</option>
+                            <option>Cotton</option>
+                            <option>Sugarcane</option>
+                          </select>
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-muted-foreground mb-1">Current Soil Moisture (%)</label>
+                          <input 
+                            type="number"
+                            value={formData.moisture}
+                            onChange={(e) => setFormData({...formData, moisture: e.target.value})}
+                            className="w-full bg-background/50 border border-border rounded-lg p-3 text-foreground focus:ring-2 focus:ring-primary outline-none"
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {activeAction === "Schedule Spraying" && (
+                    <div className="grid gap-4">
+                      <div>
+                        <label className="block text-sm font-medium text-muted-foreground mb-1">Select Crop</label>
+                        <select 
+                          value={formData.crop}
+                          onChange={(e) => setFormData({...formData, crop: e.target.value})}
+                          className="w-full bg-background/50 border border-border rounded-lg p-3 text-foreground focus:ring-2 focus:ring-primary outline-none"
+                        >
+                          <option>Wheat</option>
+                          <option>Rice</option>
+                          <option>Cotton</option>
+                          <option>Sugarcane</option>
+                        </select>
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-muted-foreground mb-1">Select Date</label>
+                        <input 
+                          type="date"
+                          value={formData.date}
+                          onChange={(e) => setFormData({...formData, date: e.target.value})}
+                          className="w-full bg-background/50 border border-border rounded-lg p-3 text-foreground focus:ring-2 focus:ring-primary outline-none"
+                        />
+                      </div>
+                    </div>
+                  )}
+
+                  {activeAction === "Check Soil pH" && (
+                    <div>
+                      <label className="block text-sm font-medium text-muted-foreground mb-1">Enter Soil pH Value</label>
+                      <input 
+                        type="number"
+                        step="0.1"
+                        placeholder="e.g. 6.5"
+                        value={formData.ph}
+                        onChange={(e) => setFormData({...formData, ph: e.target.value})}
+                        className="w-full bg-background/50 border border-border rounded-lg p-3 text-foreground focus:ring-2 focus:ring-primary outline-none"
+                      />
+                    </div>
+                  )}
+
+                  {activeAction === "Alert Settings" && (
+                    <div className="grid gap-4">
+                      <div>
+                        <label className="block text-sm font-medium text-muted-foreground mb-1">Irrigation Threshold (%)</label>
+                        <input 
+                          type="number"
+                          value={formData.irrigationThreshold}
+                          onChange={(e) => setFormData({...formData, irrigationThreshold: e.target.value})}
+                          className="w-full bg-background/50 border border-border rounded-lg p-3 text-foreground focus:ring-2 focus:ring-primary outline-none"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-muted-foreground mb-1">Temperature Threshold (°C)</label>
+                        <input 
+                          type="number"
+                          value={formData.tempThreshold}
+                          onChange={(e) => setFormData({...formData, tempThreshold: e.target.value})}
+                          className="w-full bg-background/50 border border-border rounded-lg p-3 text-foreground focus:ring-2 focus:ring-primary outline-none"
+                        />
+                      </div>
+                    </div>
+                  )}
+
+                  {activeAction === "View Weather" && (
+                    <div className="grid gap-4">
+                      <div>
+                        <label className="block text-sm font-medium text-muted-foreground mb-1">Select Region</label>
+                        <select 
+                          value={formData.region}
+                          onChange={(e) => setFormData({...formData, region: e.target.value})}
+                          className="w-full bg-background/50 border border-border rounded-lg p-3 text-foreground focus:ring-2 focus:ring-primary outline-none"
+                        >
+                          <option>Maharashtra</option>
+                          <option>Punjab</option>
+                          <option>Uttar Pradesh</option>
+                          <option>Madhya Pradesh</option>
+                          <option>Karnataka</option>
+                        </select>
+                      </div>
+                    </div>
+                  )}
+
+                  {activeAction === "Generate Report" && (
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-sm font-medium text-muted-foreground mb-1">Select Region</label>
+                        <select 
+                          value={formData.region}
+                          onChange={(e) => setFormData({...formData, region: e.target.value})}
+                          className="w-full bg-background/50 border border-border rounded-lg p-3 text-foreground focus:ring-2 focus:ring-primary outline-none"
+                        >
+                          <option>Global</option>
+                          <option>Maharashtra</option>
+                          <option>Punjab</option>
+                          <option>Uttar Pradesh</option>
+                          <option>Madhya Pradesh</option>
+                          <option>Karnataka</option>
+                        </select>
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-muted-foreground mb-1">Report Type</label>
+                        <select 
+                          value={formData.reportType}
+                          onChange={(e) => setFormData({...formData, reportType: e.target.value})}
+                          className="w-full bg-background/50 border border-border rounded-lg p-3 text-foreground focus:ring-2 focus:ring-primary outline-none"
+                        >
+                          <option>Weekly Summary</option>
+                          <option>Monthly Yield Forecast</option>
+                          <option>Soil Health Analysis</option>
+                        </select>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Submission Button for forms */}
+                  {["Start Irrigation", "Schedule Spraying", "Check Soil pH", "Alert Settings", "View Weather", "Generate Report"].includes(activeAction) && (
+                    <button
+                      onClick={() => submitAction(activeAction)}
+                      className="mt-4 w-full py-3 rounded-lg bg-primary hover:bg-primary/90 text-primary-foreground font-bold shadow-lg shadow-primary/20 transition-all"
+                    >
+                      Submit
+                    </button>
+                  )}
+                </div>
+              )}
+
+              {loadingAction ? (
+                <div className="absolute inset-0 flex flex-col items-center justify-center text-muted-foreground">
+                  <motion.div
+                    animate={{ rotate: 360 }}
+                    transition={{ duration: 1.5, repeat: Infinity, ease: "linear" }}
+                    className="w-10 h-10 border-4 border-primary/20 border-t-primary rounded-full mb-4"
+                  />
+                  <p className="animate-pulse">Analyzing...</p>
+                </div>
+              ) : actionResponse ? (
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  className="bg-white/5 p-6 rounded-2xl border border-white/5"
+                >
+                  {weatherData && weatherData.coords && (
+                    <WeatherMiniMap 
+                      coords={weatherData.coords} 
+                      temp={weatherData.temp} 
+                      weatherRegion={weatherData.region} 
+                    />
+                  )}
+                  <div className="prose prose-invert max-w-none text-foreground/90 leading-relaxed whitespace-pre-wrap mt-4">
+                    {actionResponse}
+                  </div>
+                </motion.div>
+              ) : null}
+            </div>
+
+            {!loadingAction && actionResponse && (
+              <div className="mt-8 flex justify-end gap-3">
+                <button
+                  onClick={() => setActiveAction(null)}
+                  className="px-5 py-2 rounded-lg bg-white/5 hover:bg-white/10 transition-colors text-sm font-medium"
+                >
+                  Close
+                </button>
+                <button
+                  onClick={() => {
+                    // Reset to form view if applicable
+                    setActionResponse(null);
+                    setWeatherData(null);
+                  }}
+                  className="px-5 py-2 rounded-lg bg-primary hover:bg-primary/90 text-primary-foreground transition-colors text-sm font-medium shadow-lg shadow-primary/20"
+                >
+                  Make Another Request
+                </button>
+              </div>
+            )}
+          </motion.div>
+        </div>
+      )}
     </div>
   );
 }
