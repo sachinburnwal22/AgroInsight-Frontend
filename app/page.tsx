@@ -21,6 +21,7 @@ import {
 } from "lucide-react";
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
+import MapSection from "@/components/map/MapSection";
 import Link from "next/link";
 
 // Animated Counter Component
@@ -555,7 +556,7 @@ export default function DashboardPage() {
                 </h3>
 
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                  {dashboardData ? dashboardData.field_status.map((field: any, idx: number) => (
+                  {dashboardData ? dashboardData.field_status.slice(0, 6).map((field: any, idx: number) => (
                     <motion.div
                       key={field.name}
                       initial={{ opacity: 0, scale: 0.8 }}
@@ -654,6 +655,9 @@ export default function DashboardPage() {
               </div>
             </motion.div>
           </motion.div>
+
+          {/* Interactive Map Section */}
+          <MapSection />
 
           {/* Quick Actions Section */}
           <motion.div
