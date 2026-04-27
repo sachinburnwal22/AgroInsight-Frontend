@@ -11,6 +11,8 @@ interface User {
   email: string;
   region: string;
   profile_image?: string;
+  posts_count?: number;
+  communities_count?: number;
 }
 
 interface AuthContextType {

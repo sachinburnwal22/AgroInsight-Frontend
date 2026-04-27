@@ -12,6 +12,7 @@ import { useRouter } from "next/navigation";
 export default function ProfilePage() {
   const { user, token, logout, updateUser, loading: authLoading } = useAuth();
   const router = useRouter();
+  const [stats, setStats] = useState({ posts: 0, communities: 0 });
   
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
@@ -40,6 +41,12 @@ export default function ProfilePage() {
       if (user.profile_image) {
         setPreviewImage(`http://127.0.0.1:8000${user.profile_image}`);
       }
+      
+      // Use dynamic stats from backend
+      setStats({
+        posts: user.posts_count || 0,
+        communities: user.communities_count || 0
+      });
     }
   }, [user, authLoading, router]);
 
@@ -141,8 +148,8 @@ export default function ProfilePage() {
 
           <div className="px-8 pb-8">
             <form onSubmit={handleSubmit}>
-              {/* Profile Picture */}
-              <div className="relative -mt-20 mb-8 flex justify-between items-end">
+              {/* Profile Picture and Stats */}
+              <div className="relative -mt-20 mb-8 flex flex-col md:flex-row justify-between items-end md:items-end gap-6">
                 <div className="relative group">
                   <div className="w-32 h-32 rounded-2xl bg-[#1a1a2e] border-4 border-[#0a0a1a] shadow-xl overflow-hidden relative">
                     {previewImage ? (
@@ -167,6 +174,17 @@ export default function ProfilePage() {
                     onChange={handleImageChange}
                     accept="image/*"
                   />
+                </div>
+                
+                <div className="flex gap-4">
+                  <div className="bg-white/5 border border-white/10 rounded-xl px-6 py-3 text-center">
+                    <p className="text-2xl font-bold text-primary">{stats.communities}</p>
+                    <p className="text-xs text-muted-foreground uppercase tracking-wider">Communities</p>
+                  </div>
+                  <div className="bg-white/5 border border-white/10 rounded-xl px-6 py-3 text-center">
+                    <p className="text-2xl font-bold text-accent">{stats.posts}</p>
+                    <p className="text-xs text-muted-foreground uppercase tracking-wider">Posts</p>
+                  </div>
                 </div>
               </div>
 
