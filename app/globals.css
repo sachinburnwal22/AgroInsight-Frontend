@@ -127,6 +127,14 @@
   body {
     @apply bg-background text-foreground;
   }
+
+  /* Hide default cursor on desktop devices where custom cursor is active */
+  @media (pointer: fine) {
+    .custom-cursor-active,
+    .custom-cursor-active * {
+      cursor: none !important;
+    }
+  }
 }
 
 /* Animation utilities for Framer Motion */

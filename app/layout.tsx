@@ -3,6 +3,8 @@ import { Geist, Geist_Mono } from 'next/font/google'
 import { Analytics } from '@vercel/analytics/next'
 import { Toaster } from 'sonner'
 import { AuthProvider } from '@/context/AuthContext'
+import CustomCursor from '@/components/ui/CustomCursor'
+import BackgroundWrapper from '@/components/ui/BackgroundWrapper'
 import './globals.css'
 
 const _geist = Geist({ subsets: ["latin"] });
@@ -49,9 +51,12 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className="dark">
-      <body className="font-sans antialiased bg-background text-foreground">
+      <body className="font-sans antialiased bg-background text-foreground custom-cursor-active">
+        <CustomCursor />
         <AuthProvider>
-          {children}
+          <BackgroundWrapper>
+            {children}
+          </BackgroundWrapper>
           <Toaster theme="dark" position="top-right" />
         </AuthProvider>
         {process.env.NODE_ENV === 'production' && <Analytics />}
