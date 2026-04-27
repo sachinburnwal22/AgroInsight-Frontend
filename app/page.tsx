@@ -25,6 +25,7 @@ import MapSection from "@/components/map/MapSection";
 import Link from "next/link";
 import axios from "axios";
 import dynamic from "next/dynamic";
+import { useAuth } from "@/context/AuthContext";
 
 const WeatherMiniMap = dynamic(
   () => import("@/components/map/WeatherMiniMap"),
@@ -70,6 +71,7 @@ function AnimatedCounter({
 }
 
 export default function DashboardPage() {
+  const { user } = useAuth();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [hoveredStat, setHoveredStat] = useState<number | null>(null);
   const [dashboardData, setDashboardData] = useState<any>(null);
@@ -382,13 +384,19 @@ export default function DashboardPage() {
               />
             </motion.button>
 
-            <motion.button
-              whileHover={{ scale: 1.1, rotate: 20 }}
-              whileTap={{ scale: 0.95 }}
-              className="p-2.5 hover:bg-primary/15 rounded-xl transition-all duration-300 cursor-pointer group hidden sm:flex"
-            >
-              <Settings className="w-5 h-5 text-muted-foreground group-hover:text-primary transition-colors" />
-            </motion.button>
+            <Link href={user ? "/profile" : "/login"}>
+              <motion.button
+                whileHover={{ scale: 1.1, rotate: 20 }}
+                whileTap={{ scale: 0.95 }}
+                className="p-2.5 hover:bg-primary/15 rounded-xl transition-all duration-300 cursor-pointer group hidden sm:flex"
+              >
+                {user && user.profile_image ? (
+                  <img src={`http://127.0.0.1:8000${user.profile_image}`} alt="Profile" className="w-6 h-6 rounded-full object-cover border border-primary/30" />
+                ) : (
+                  <Settings className="w-5 h-5 text-muted-foreground group-hover:text-primary transition-colors" />
+                )}
+              </motion.button>
+            </Link>
           </motion.div>
         </div>
       </header>
@@ -429,6 +437,16 @@ export default function DashboardPage() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8 }}
           >
+            {user && user.region && (
+              <motion.div
+                initial={{ opacity: 0, y: -20 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="mb-6 inline-flex items-center gap-2 px-4 py-2 rounded-full bg-black/40 border border-primary/30 backdrop-blur-md"
+              >
+                <span className="text-xl">🌾</span>
+                <p className="text-white font-medium">Welcome, Farmer from {user.region}</p>
+              </motion.div>
+            )}
             <motion.h1
               className="text-6xl md:text-7xl font-bold mb-6 bg-gradient-to-r from-primary via-accent to-secondary bg-clip-text text-transparent"
               animate={{ scale: [1, 1.02, 1] }}
