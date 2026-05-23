@@ -15,7 +15,8 @@ import {
   Settings, 
   Menu, 
   X,
-  ChevronRight
+  ChevronRight,
+  ShoppingBag
 } from "lucide-react";
 
 interface NavItem {
@@ -44,9 +45,9 @@ export default function FloatingNavbar() {
 
   const navItems: NavItem[] = [
     { name: "Dashboard", href: "/", icon: BarChart3 },
-    { name: "Cropping Patterns", href: "/cropping-patterns", icon: Sprout },
-    { name: "Crop Recommendation", href: "/crop-recommendation", icon: Leaf },
+    { name: "Crop Advisor", href: "/crop-recommendation", icon: Sprout },
     { name: "Community", href: "/community", icon: Users },
+    { name: "AgriMarket", href: "/market", icon: ShoppingBag },
   ];
 
   // Mobile menu variants
@@ -55,7 +56,7 @@ export default function FloatingNavbar() {
       opacity: 0,
       y: "-100%",
       transition: {
-        type: "spring",
+        type: "spring" as const,
         stiffness: 300,
         damping: 30,
         staggerChildren: 0.05,
@@ -66,7 +67,7 @@ export default function FloatingNavbar() {
       opacity: 1,
       y: 0,
       transition: {
-        type: "spring",
+        type: "spring" as const,
         stiffness: 250,
         damping: 25,
         staggerChildren: 0.07,
@@ -77,7 +78,7 @@ export default function FloatingNavbar() {
 
   const menuItemVariants = {
     closed: { opacity: 0, x: -20 },
-    open: { opacity: 1, x: 0, transition: { type: "spring", stiffness: 300, damping: 20 } }
+    open: { opacity: 1, x: 0, transition: { type: "spring" as const, stiffness: 300, damping: 20 } }
   };
 
   return (

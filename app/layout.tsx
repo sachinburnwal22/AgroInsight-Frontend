@@ -3,6 +3,7 @@ import { Geist, Geist_Mono } from 'next/font/google'
 import { Analytics } from '@vercel/analytics/next'
 import { Toaster } from 'sonner'
 import { AuthProvider } from '@/context/AuthContext'
+import { CartProvider } from '@/context/CartContext'
 import CustomCursor from '@/components/ui/CustomCursor'
 import BackgroundWrapper from '@/components/ui/BackgroundWrapper'
 import './globals.css'
@@ -54,10 +55,12 @@ export default function RootLayout({
       <body className="font-sans antialiased bg-background text-foreground custom-cursor-active">
         <CustomCursor />
         <AuthProvider>
-          <BackgroundWrapper>
-            {children}
-          </BackgroundWrapper>
-          <Toaster theme="dark" position="top-right" />
+          <CartProvider>
+            <BackgroundWrapper>
+              {children}
+            </BackgroundWrapper>
+            <Toaster theme="dark" position="top-right" />
+          </CartProvider>
         </AuthProvider>
         {process.env.NODE_ENV === 'production' && <Analytics />}
       </body>

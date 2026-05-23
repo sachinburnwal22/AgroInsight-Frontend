@@ -29,6 +29,7 @@ import Particles from "@/components/ui/Particles";
 import MapSection from "@/components/map/MapSection";
 import FloatingNavbar from "@/components/ui/FloatingNavbar";
 import FieldStatusSection from "@/components/dashboard/FieldStatusSection";
+import AdvisoryWidget from "@/components/dashboard/AdvisoryWidget";
 import FlowingMenu from "@/components/ui/FlowingMenu";
 import ElectricBorder from "@/components/ui/ElectricBorder";
 
@@ -190,7 +191,7 @@ export default function Dashboard() {
     visible: {
       y: 0,
       opacity: 1,
-      transition: { type: "spring", stiffness: 100 },
+      transition: { type: "spring" as const, stiffness: 100 },
     },
   };
 
@@ -382,6 +383,11 @@ export default function Dashboard() {
             <div className="lg:col-span-2">
               <FieldStatusSection />
             </div>
+          </div>
+
+          {/* AI Disaster Alert & Crop Recommendation Widget */}
+          <div className="mb-16">
+            <AdvisoryWidget />
           </div>
 
           {/* Interactive Map Section */}
