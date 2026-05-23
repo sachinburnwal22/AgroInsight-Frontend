@@ -4,6 +4,7 @@ import React, { useState, useEffect } from "react";
 import dynamic from "next/dynamic";
 import { motion } from "framer-motion";
 import InfoPanel from "./InfoPanel";
+import ElectricBorder from "@/components/ui/ElectricBorder";
 
 // Dynamically import InteractiveMap with ssr disabled
 const InteractiveMap = dynamic(() => import("./InteractiveMap"), {
@@ -75,25 +76,33 @@ export default function MapSection() {
         </p>
       </motion.div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 bg-background/30 backdrop-blur-3xl p-4 lg:p-6 rounded-[2.5rem] border border-white/5 shadow-2xl h-auto">
-        {/* Map Container - Takes up 2/3 of space on large screens */}
-        <div className="lg:col-span-2 h-[500px] lg:h-[600px] relative z-0">
-          <InteractiveMap
-            selectedState={selectedState}
-            onStateClick={(stateName) => setSelectedState(stateName)}
-          />
-        </div>
+      <ElectricBorder
+        color="#00d084"
+        speed={0.4}
+        chaos={0.08}
+        borderRadius={40}
+        className="w-full"
+      >
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 bg-background/80 backdrop-blur-3xl p-4 lg:p-6 rounded-[2.5rem] border border-white/5 shadow-2xl h-auto">
+          {/* Map Container - Takes up 2/3 of space on large screens */}
+          <div className="lg:col-span-2 h-[500px] lg:h-[600px] relative z-0">
+            <InteractiveMap
+              selectedState={selectedState}
+              onStateClick={(stateName) => setSelectedState(stateName)}
+            />
+          </div>
 
-        {/* Side Panel - Takes up 1/3 of space */}
-        <div className="lg:col-span-1 h-[500px] lg:h-[600px] z-10">
-          <InfoPanel
-            loading={loading}
-            regionData={regionData}
-            selectedState={selectedState}
-            onClose={() => setSelectedState(null)}
-          />
+          {/* Side Panel - Takes up 1/3 of space */}
+          <div className="lg:col-span-1 h-[500px] lg:h-[600px] z-10">
+            <InfoPanel
+              loading={loading}
+              regionData={regionData}
+              selectedState={selectedState}
+              onClose={() => setSelectedState(null)}
+            />
+          </div>
         </div>
-      </div>
+      </ElectricBorder>
     </section>
   );
 }

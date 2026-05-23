@@ -25,11 +25,20 @@ import Link from "next/link";
 import axios from "axios";
 import dynamic from "next/dynamic";
 import { useAuth } from "@/context/AuthContext";
-import FloatingNodes from "@/components/ui/FloatingNodes";
+import Particles from "@/components/ui/Particles";
 import MapSection from "@/components/map/MapSection";
+import FloatingNavbar from "@/components/ui/FloatingNavbar";
+import FieldStatusSection from "@/components/dashboard/FieldStatusSection";
+import FlowingMenu from "@/components/ui/FlowingMenu";
+import ElectricBorder from "@/components/ui/ElectricBorder";
 
 const WeatherMiniMap = dynamic(
   () => import("@/components/map/WeatherMiniMap"),
+  { ssr: false }
+);
+
+const WeatherIntelligence = dynamic(
+  () => import("@/components/map/WeatherIntelligence"),
   { ssr: false }
 );
 
@@ -66,7 +75,6 @@ export default function Dashboard() {
   const [hoveredStat, setHoveredStat] = useState<number | null>(null);
   const [activeAction, setActiveAction] = useState<string | null>(null);
   const [dashboardData, setDashboardData] = useState<any>(null);
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [actionResponse, setActionResponse] = useState<string | null>(null);
   const [loadingAction, setLoadingAction] = useState(false);
   const [weatherData, setWeatherData] = useState<any>(null);
@@ -125,11 +133,11 @@ export default function Dashboard() {
           payload = { date: formData.date, crop: formData.crop, region: formData.region };
           break;
         case "Check Soil pH":
-          endpoint = "/api/soil/ph";
+          endpoint = "/api/soil/analyze";
           payload = { ph: formData.ph, region: formData.region };
           break;
         case "View Weather":
-          endpoint = "/api/weather";
+          endpoint = "/api/weather/view";
           payload = { region: formData.region };
           break;
         case "Generate Report":
@@ -189,87 +197,7 @@ export default function Dashboard() {
   return (
     <div className="relative min-h-screen bg-gradient-to-br from-background via-background to-[#0f0f2e] text-foreground overflow-hidden">
       {/* Navbar */}
-      <nav className="fixed top-0 left-0 right-0 z-50 bg-background/60 backdrop-blur-xl border-b border-white/5">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-20">
-            <div className="flex items-center gap-4">
-              <button
-                className="p-2 rounded-lg hover:bg-white/5 transition-colors lg:hidden"
-                onClick={() => setIsMobileMenuOpen(true)}
-              >
-                <Menu className="w-6 h-6" />
-              </button>
-              <div className="flex items-center gap-3 group cursor-pointer">
-                <div className="relative">
-                  <div className="absolute inset-0 bg-primary/40 rounded-xl blur-lg group-hover:bg-primary/60 transition-all duration-300" />
-                  <div className="relative bg-gradient-to-br from-primary to-accent p-2.5 rounded-xl">
-                    <Leaf className="w-6 h-6 text-background" />
-                  </div>
-                </div>
-                <span className="text-2xl font-black tracking-tight">
-                  Agro<span className="text-primary">Insight</span>
-                </span>
-              </div>
-            </div>
-
-            <div className="hidden lg:flex items-center gap-8">
-              {[
-                { name: "Dashboard", href: "/", icon: BarChart3 },
-                { name: "Cropping Patterns", href: "/cropping-patterns", icon: Book },
-                { name: "Community", href: "/community", icon: Users },
-              ].map((item) => (
-                <Link
-                  key={item.name}
-                  href={item.href}
-                  className="flex items-center gap-2 text-muted-foreground hover:text-white transition-colors py-2 group font-medium"
-                >
-                  <item.icon className="w-4 h-4 group-hover:text-primary transition-colors" />
-                  {item.name}
-                </Link>
-              ))}
-            </div>
-
-            <div className="flex items-center gap-4">
-              <div className="hidden md:flex items-center gap-4 border-r border-white/10 pr-4">
-                <button className="p-2 rounded-full hover:bg-white/5 text-muted-foreground hover:text-white transition-colors relative group">
-                  <Bell className="w-5 h-5" />
-                  <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-destructive rounded-full border border-background" />
-                </button>
-              </div>
-
-              {user ? (
-                <div className="flex items-center gap-3">
-                  <Link href="/profile" className="flex items-center gap-3 hover:bg-white/5 p-2 rounded-xl transition-colors cursor-pointer border border-transparent hover:border-white/10">
-                    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary/30 to-accent/30 flex items-center justify-center font-bold text-white overflow-hidden border border-white/10">
-                      {user.profile_image ? (
-                        <img src={`http://127.0.0.1:8000${user.profile_image}`} className="w-full h-full object-cover" />
-                      ) : (
-                        user.name.charAt(0)
-                      )}
-                    </div>
-                    <div className="hidden sm:block text-sm">
-                      <p className="font-semibold text-white leading-tight">{user.name}</p>
-                      <p className="text-xs text-muted-foreground">{user.region}</p>
-                    </div>
-                  </Link>
-                  <button onClick={logout} className="p-2 rounded-lg hover:bg-destructive/10 text-muted-foreground hover:text-destructive transition-colors ml-2">
-                    <LogOutIcon className="w-5 h-5" />
-                  </button>
-                </div>
-              ) : (
-                <div className="flex items-center gap-3">
-                  <Link href="/login" className="px-4 py-2 text-sm font-medium hover:text-white transition-colors">
-                    Login
-                  </Link>
-                  <Link href="/signup" className="px-4 py-2 bg-primary hover:bg-primary/90 text-black text-sm font-bold rounded-lg transition-colors">
-                    Sign Up
-                  </Link>
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
-      </nav>
+      <FloatingNavbar />
 
       <main className="pt-20 pb-12 relative z-10">
         {/* Hero Section with Video & 3D Elements */}
@@ -283,7 +211,18 @@ export default function Dashboard() {
           </motion.div>
 
           {/* 3D Floating Elements Overlay */}
-          <FloatingNodes />
+          <div className="absolute inset-0 z-0 pointer-events-none">
+            <Particles
+              particleColors={["#00d084", "#00b4d8", "#7b2cbf"]}
+              particleCount={120}
+              particleSpread={10}
+              speed={0.12}
+              particleBaseSize={100}
+              moveParticlesOnHover={true}
+              alphaParticles={true}
+              disableRotation={false}
+            />
+          </div>
 
           {/* Hero Content */}
           <motion.div
@@ -440,37 +379,8 @@ export default function Dashboard() {
             </motion.div>
 
             {/* Right Column: Field Status */}
-            <div className="lg:col-span-2 space-y-8">
-              <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} className="bg-card/40 backdrop-blur-xl border border-white/10 rounded-3xl p-6 lg:p-8 shadow-2xl">
-                <h3 className="text-2xl font-bold mb-6 flex items-center gap-2">
-                  <Leaf className="w-6 h-6 text-accent" /> Field Status Overview
-                </h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  {dashboardData && dashboardData.field_status ? dashboardData.field_status.slice(0, 4).map((field: any, idx: number) => (
-                    <motion.div key={field.name} whileHover={{ scale: 1.02, y: -5 }} className="p-6 bg-white/5 rounded-xl border border-white/10 hover:border-primary/50 transition-all duration-300 group/card">
-                      <div className="flex justify-between items-center mb-4">
-                        <p className="font-bold text-lg">{field.name}</p>
-                        <span className={`text-xs px-3 py-1 rounded-full font-semibold ${field.color === "primary" ? "bg-primary/20 text-primary" : field.color === "accent" ? "bg-accent/20 text-accent" : "bg-destructive/20 text-destructive"}`}>
-                          {field.status}
-                        </span>
-                      </div>
-                      <div className="relative mb-4 w-full bg-white/10 rounded-full h-3 overflow-hidden">
-                        <motion.div
-                          className={`h-full rounded-full bg-gradient-to-r ${field.color === "primary" ? "from-primary to-accent" : field.color === "accent" ? "from-accent to-primary" : "from-destructive to-destructive/50"}`}
-                          initial={{ width: 0 }}
-                          whileInView={{ width: `${field.progress}%` }}
-                          transition={{ duration: 1.5, delay: 0.2 }}
-                        />
-                      </div>
-                      <p className="text-sm font-semibold flex justify-between">
-                        Health Score <span className={`text-${field.color}`}>{field.progress}%</span>
-                      </p>
-                    </motion.div>
-                  )) : (
-                    <div className="col-span-2 flex justify-center py-12"><Loader2Icon className="w-10 h-10 animate-spin text-primary" /></div>
-                  )}
-                </div>
-              </motion.div>
+            <div className="lg:col-span-2">
+              <FieldStatusSection />
             </div>
           </div>
 
@@ -483,22 +393,41 @@ export default function Dashboard() {
             <p className="text-muted-foreground mb-8">Learn sustainable farming techniques to maximize your crop yield</p>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {[
-                { title: "Crop Rotation", desc: "Rotate crops seasonally to reduce soil nutrient depletion and pest buildup", tips: ["Alternate legumes with cereals", "Improve soil fertility naturally", "Reduce pesticide use by 30%"], emoji: "🔄" },
-                { title: "Water Management", desc: "Optimize irrigation schedules based on soil moisture and weather patterns", tips: ["Drip irrigation saves 40% water", "Monitor rainfall patterns", "Schedule irrigation wisely"], emoji: "💧" },
-                { title: "Soil Health", desc: "Maintain soil pH and nutrients for sustainable long-term productivity", tips: ["Test soil every 2-3 years", "Add organic compost regularly", "Avoid continuous monoculture"], emoji: "🌱" },
-                { title: "Pest Management", desc: "Integrated pest management reduces chemical usage and costs", tips: ["Use natural predators", "Companion planting works", "Early detection is key"], emoji: "🐛" },
-                { title: "Seasonal Planting", desc: "Plant crops according to seasons and regional climate patterns", tips: ["Follow local rainfall patterns", "Check government crop calendars", "Plan 3-6 months ahead"], emoji: "📅" },
-                { title: "Market Analysis", desc: "Choose crops based on market demand and price trends", tips: ["Check MSP rates", "Research buyer networks", "Plan crop diversity"], emoji: "📈" }
+                { title: "Crop Rotation", desc: "Rotate crops seasonally to reduce soil nutrient depletion and pest buildup", tips: ["Alternate legumes with cereals", "Improve soil fertility naturally", "Reduce pesticide use by 30%"], emoji: "🔄", color: "#3b82f6" },
+                { title: "Water Management", desc: "Optimize irrigation schedules based on soil moisture and weather patterns", tips: ["Drip irrigation saves 40% water", "Monitor rainfall patterns", "Schedule irrigation wisely"], emoji: "💧", color: "#00b4d8" },
+                { title: "Soil Health", desc: "Maintain soil pH and nutrients for sustainable long-term productivity", tips: ["Test soil every 2-3 years", "Add organic compost regularly", "Avoid continuous monoculture"], emoji: "🌱", color: "#10b981" },
+                { title: "Pest Management", desc: "Integrated pest management reduces chemical usage and costs", tips: ["Use natural predators", "Companion planting works", "Early detection is key"], emoji: "🐛", color: "#a855f7" },
+                { title: "Seasonal Planting", desc: "Plant crops according to seasons and regional climate patterns", tips: ["Follow local rainfall patterns", "Check government crop calendars", "Plan 3-6 months ahead"], emoji: "📅", color: "#f59e0b" },
+                { title: "Market Analysis", desc: "Choose crops based on market demand and price trends", tips: ["Check MSP rates", "Research buyer networks", "Plan crop diversity"], emoji: "📈", color: "#6366f1" }
               ].map((tip, idx) => (
-                <motion.div key={tip.title} variants={itemVariants} whileHover={{ y: -10 }} className="bg-card/40 border border-white/10 rounded-2xl p-6 backdrop-blur-xl group hover:shadow-[0_0_30px_rgba(0,208,132,0.2)] transition-shadow">
-                  <div className="text-4xl mb-3">{tip.emoji}</div>
-                  <h3 className="text-xl font-bold mb-2">{tip.title}</h3>
-                  <p className="text-sm text-muted-foreground mb-4">{tip.desc}</p>
-                  <div className="space-y-2">
-                    {tip.tips.map((item, i) => (
-                      <div key={item} className="flex items-start gap-2 text-sm text-white/80"><span className="text-primary font-bold">✓</span> <span>{item}</span></div>
-                    ))}
-                  </div>
+                <motion.div 
+                  key={tip.title} 
+                  variants={itemVariants} 
+                  whileHover={{ y: -10 }}
+                  className="h-full"
+                >
+                  <ElectricBorder
+                    color={tip.color}
+                    speed={1}
+                    chaos={0.1}
+                    borderRadius={24}
+                  >
+                    <div className="bg-card/90 border border-white/5 rounded-[24px] p-6 backdrop-blur-xl h-full flex flex-col justify-between">
+                      <div>
+                        <div className="text-4xl mb-3">{tip.emoji}</div>
+                        <h3 className="text-xl font-bold mb-2 text-white">{tip.title}</h3>
+                        <p className="text-sm text-muted-foreground mb-4">{tip.desc}</p>
+                      </div>
+                      <div className="space-y-2 mt-auto">
+                        {tip.tips.map((item, i) => (
+                          <div key={item} className="flex items-start gap-2 text-sm text-white/80">
+                            <span className="text-primary font-bold">✓</span> 
+                            <span>{item}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </ElectricBorder>
                 </motion.div>
               ))}
             </div>
@@ -508,23 +437,45 @@ export default function Dashboard() {
           <motion.div variants={containerVariants} initial="hidden" whileInView="visible" viewport={{ once: true }} className="mb-20">
             <h2 className="text-3xl font-bold mb-2">Why Choose AgroInsight</h2>
             <p className="text-muted-foreground mb-8">Powerful features designed for modern farmers</p>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {[
-                { title: "Real-time Monitoring", desc: "Track soil moisture, temperature, and crop health 24/7 with IoT sensors", icon: "📊" },
-                { title: "Weather Integration", desc: "Get accurate weather forecasts tailored to your farm location", icon: "🌤️" },
-                { title: "Crop Analytics", desc: "Analyze yield patterns and optimize crop selection for maximum ROI", icon: "📈" },
-                { title: "Expert Guidance", desc: "Access personalized recommendations from agricultural experts", icon: "👨‍🌾" },
-                { title: "Market Insights", desc: "Monitor crop prices and market trends to maximize profits", icon: "💰" },
-                { title: "Government Schemes", desc: "Get updates on subsidies, MSP rates, and agricultural programs", icon: "📋" }
-              ].map((feature, idx) => (
-                <motion.div key={feature.title} variants={itemVariants} whileHover={{ x: 10, backgroundColor: "rgba(255,255,255,0.05)" }} className="flex gap-4 p-6 bg-card/40 border border-white/10 rounded-xl backdrop-blur-xl transition-all cursor-pointer">
-                  <div className="text-4xl flex-shrink-0">{feature.icon}</div>
-                  <div>
-                    <h3 className="font-bold text-lg mb-1">{feature.title}</h3>
-                    <p className="text-sm text-muted-foreground">{feature.desc}</p>
-                  </div>
-                </motion.div>
-              ))}
+            <div className="relative w-full overflow-hidden">
+              <FlowingMenu 
+                items={[
+                  { 
+                    link: "#", 
+                    text: "Real-Time Monitoring", 
+                    image: "https://images.unsplash.com/photo-1563514220-ea979fda5a18?auto=format&fit=crop&w=600&q=80" 
+                  },
+                  { 
+                    link: "#", 
+                    text: "Weather Integration", 
+                    image: "https://images.unsplash.com/photo-1500382017468-9049fed747ef?auto=format&fit=crop&w=600&q=80" 
+                  },
+                  { 
+                    link: "#", 
+                    text: "Crop Analytics", 
+                    image: "https://images.unsplash.com/photo-1530595467537-0b5996c41f2d?auto=format&fit=crop&w=600&q=80" 
+                  },
+                  { 
+                    link: "#", 
+                    text: "Expert Guidance", 
+                    image: "https://images.unsplash.com/photo-1595974482597-4b8da8879bc5?auto=format&fit=crop&w=600&q=80" 
+                  },
+                  { 
+                    link: "#", 
+                    text: "Market Insights", 
+                    image: "https://images.unsplash.com/photo-1574323347407-f5e1ad6d020b?auto=format&fit=crop&w=600&q=80" 
+                  },
+                  { 
+                    link: "#", 
+                    text: "Government Schemes", 
+                    image: "https://images.unsplash.com/photo-1536240478700-b869070f9279?auto=format&fit=crop&w=600&q=80" 
+                  }
+                ]} 
+                marqueeBgColor="#00d084" 
+                marqueeTextColor="#09090b" 
+                borderColor="rgba(255, 255, 255, 0.08)"
+                speed={12} 
+              />
             </div>
           </motion.div>
         </div>
@@ -532,7 +483,10 @@ export default function Dashboard() {
 
       {/* AI Assistant Modal */}
       <AnimatePresence>
-        {activeAction && (
+        {activeAction === "View Weather" && (
+          <WeatherIntelligence onClose={() => setActiveAction(null)} />
+        )}
+        {activeAction && activeAction !== "View Weather" && (
           <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="absolute inset-0 bg-black/80 backdrop-blur-md" onClick={() => setActiveAction(null)} />
             <motion.div initial={{ scale: 0.9, opacity: 0, y: 20 }} animate={{ scale: 1, opacity: 1, y: 0 }} exit={{ scale: 0.9, opacity: 0, y: 20 }} className="relative w-full max-w-2xl bg-[#0a0a1a]/90 border border-primary/30 rounded-3xl shadow-[0_0_50px_rgba(0,208,132,0.2)] p-8 backdrop-blur-2xl">

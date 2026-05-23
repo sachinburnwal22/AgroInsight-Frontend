@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import Link from "next/link";
+import FloatingNavbar from "@/components/ui/FloatingNavbar";
 import {
   ArrowLeft,
   Sprout,
@@ -25,7 +26,6 @@ interface CropRecommendation {
   expectedYield: string;
   marketDemand: string;
   governmentSupport: string;
-  reason: string;
   reason: string;
   emoji: string;
 }
@@ -161,25 +161,7 @@ export default function CropRecommendationPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background to-[#0f0f2e]">
-      {/* Header */}
-      <header className="fixed top-0 left-0 right-0 z-40 bg-card/80 border-b border-border backdrop-blur-lg">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
-          <Link href="/">
-            <motion.button
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              className="flex items-center gap-2 text-primary hover:text-accent transition-colors"
-            >
-              <ArrowLeft className="w-5 h-5" />
-              <span className="font-semibold">Back</span>
-            </motion.button>
-          </Link>
-          <h1 className="text-2xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
-            Crop Recommendation Engine
-          </h1>
-          <div className="w-24" />
-        </div>
-      </header>
+      <FloatingNavbar />
 
       <main className="pt-24 pb-12">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">

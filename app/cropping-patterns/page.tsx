@@ -20,9 +20,9 @@ import {
   Search,
 } from "lucide-react";
 import Link from "next/link";
+import FloatingNavbar from "@/components/ui/FloatingNavbar";
 
 export default function CroppingPatternsPage() {
-  const [sidebarOpen, setSidebarOpen] = useState(false);
   const [expandedRegion, setExpandedRegion] = useState<string | null>(
     "north-india",
   );
@@ -80,149 +80,7 @@ export default function CroppingPatternsPage() {
         />
       </div>
 
-      {/* Sidebar Menu with Overlay */}
-      {sidebarOpen && (
-        <>
-          <motion.div
-            className="fixed inset-0 z-30 bg-black/50 backdrop-blur-sm"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 0.3 }}
-            onClick={() => setSidebarOpen(false)}
-          />
-
-          <motion.div
-            className="fixed left-0 top-0 bottom-0 z-40 w-72 bg-card border-r border-border shadow-2xl"
-            initial={{ x: -288 }}
-            animate={{ x: 0 }}
-            transition={{ duration: 0.3, ease: "easeInOut" }}
-          >
-            <div className="h-20 flex items-center justify-between px-6 border-b border-border">
-              <h3 className="text-lg font-bold text-primary">Menu</h3>
-              <button
-                onClick={() => setSidebarOpen(false)}
-                className="p-2 hover:bg-muted rounded-lg transition-colors cursor-pointer"
-              >
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-
-            <nav className="p-4 space-y-2">
-              {[
-                { label: "Dashboard", icon: BarChart3, href: "/" },
-                {
-                  label: "Cropping Patterns",
-                  icon: Sprout,
-                  href: "/cropping-patterns",
-                },
-                {
-                  label: "Crop Recommendation",
-                  icon: Leaf,
-                  href: "/crop-recommendation",
-                },
-                { label: "Resources", icon: Book, href: "/resources" },
-                { label: "Community", icon: Users, href: "/community" },
-              ].map((item, idx) => {
-                const Icon = item.icon;
-                return (
-                  <motion.div
-                    key={item.label}
-                    initial={{ opacity: 0, x: -20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: idx * 0.05, duration: 0.3 }}
-                  >
-                    <Link
-                      href={item.href}
-                      onClick={() => setSidebarOpen(false)}
-                      className="block w-full"
-                    >
-                      <div className="w-full flex items-center gap-3 px-4 py-3 rounded-lg bg-muted/50 hover:bg-muted text-foreground transition-all duration-300 group cursor-pointer hover:scale-105 active:scale-95">
-                        <Icon className="w-5 h-5 text-primary group-hover:text-accent transition-colors" />
-                        <span className="font-medium flex-1">{item.label}</span>
-                        <ChevronDown className="w-4 h-4 opacity-50 group-hover:opacity-100" />
-                      </div>
-                    </Link>
-                  </motion.div>
-                );
-              })}
-            </nav>
-
-            <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-border bg-card">
-              <motion.div
-                className="bg-gradient-to-r from-primary/20 to-accent/20 border border-primary/40 rounded-lg p-4"
-                animate={{ y: [0, -5, 0] }}
-                transition={{ duration: 3, repeat: Infinity }}
-              >
-                <p className="text-sm text-foreground font-semibold mb-2">
-                  Pro Tip
-                </p>
-                <p className="text-xs text-muted-foreground">
-                  Check out different regions to discover optimal crop
-                  cultivation practices
-                </p>
-              </motion.div>
-            </div>
-          </motion.div>
-        </>
-      )}
-
-      {/* Header */}
-      <header className="fixed top-0 left-0 right-0 z-40 bg-transparent backdrop-blur-md bg-gradient-to-b from-background/40 to-transparent border-b border-primary/10">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
-          <motion.div
-            className="flex items-center gap-4"
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.6 }}
-          >
-            <motion.button
-              onClick={() => setSidebarOpen(!sidebarOpen)}
-              whileHover={{
-                scale: 1.1,
-                backgroundColor: "rgba(var(--primary), 0.15)",
-              }}
-              whileTap={{ scale: 0.95 }}
-              className="p-2.5 rounded-xl transition-all duration-300 hover:shadow-lg hover:shadow-primary/30 relative cursor-pointer flex items-center justify-center group"
-              type="button"
-            >
-              <Menu className="w-5 h-5 text-primary group-hover:text-accent transition-colors" />
-            </motion.button>
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ delay: 0.1, duration: 0.6 }}
-            >
-              <Link href="/">
-                <motion.h1
-                  className="text-xl md:text-2xl font-bold bg-gradient-to-r from-primary via-accent to-primary bg-clip-text text-transparent cursor-pointer"
-                  whileHover={{ scale: 1.05 }}
-                >
-                  AgroInsight
-                </motion.h1>
-              </Link>
-            </motion.div>
-          </motion.div>
-
-          <motion.div
-            className="flex items-center gap-3 md:gap-4"
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.6 }}
-          >
-            <motion.div
-              className="hidden md:flex items-center gap-2 bg-gradient-to-r from-primary/5 to-accent/5 border border-primary/20 rounded-xl px-4 py-2 backdrop-blur-sm hover:border-primary/40 transition-all duration-300 group"
-              whileHover={{ scale: 1.02 }}
-            >
-              <Search className="w-4 h-4 text-muted-foreground group-hover:text-primary transition-colors" />
-              <input
-                type="text"
-                placeholder="Search crops..."
-                className="bg-transparent text-sm placeholder-muted-foreground outline-none w-40 group-hover:placeholder-primary/60 transition-colors"
-              />
-            </motion.div>
-          </motion.div>
-        </div>
-      </header>
+      <FloatingNavbar />
 
       {/* Main Content */}
       <main className="pt-24 pb-12 relative z-10">
