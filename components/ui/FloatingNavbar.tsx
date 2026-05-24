@@ -5,6 +5,7 @@ import { motion, AnimatePresence, useScroll, useMotionValueEvent } from "framer-
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
+import axios from "axios";
 import { 
   BarChart3, 
   Sprout, 
@@ -16,7 +17,8 @@ import {
   Menu, 
   X,
   ChevronRight,
-  ShoppingBag
+  ShoppingBag,
+  Newspaper
 } from "lucide-react";
 
 interface NavItem {
@@ -33,6 +35,23 @@ export default function FloatingNavbar() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const { scrollY } = useScroll();
 
+  const [notifications, setNotifications] = useState<any[]>([]);
+  const [showNotifications, setShowNotifications] = useState(false);
+
+  useEffect(() => {
+    const fetchNotifications = async () => {
+      try {
+        const token = localStorage.getItem("auth_token");
+        const headers = token ? { Authorization: `Bearer ${token}` } : {};
+        const res = await axios.get("http://127.0.0.1:8000/api/alerts/government", { headers });
+        setNotifications(res.data.data || []);
+      } catch (err) {
+        console.error("Failed to fetch navbar notifications", err);
+      }
+    };
+    fetchNotifications();
+  }, [user]);
+
   // Listen to scroll to update morph state
   useMotionValueEvent(scrollY, "change", (latest) => {
     setIsScrolled(latest > 30);
@@ -48,6 +67,7 @@ export default function FloatingNavbar() {
     { name: "Crop Advisor", href: "/crop-recommendation", icon: Sprout },
     { name: "Community", href: "/community", icon: Users },
     { name: "AgriMarket", href: "/market", icon: ShoppingBag },
+    { name: "AgriIntel", href: "/agri-intel", icon: Newspaper },
   ];
 
   // Mobile menu variants
@@ -188,14 +208,60 @@ export default function FloatingNavbar() {
         <div className="flex items-center gap-4">
           {/* Notifications & Settings Quick Links (Desktop) */}
           <div className="hidden md:flex items-center gap-2 border-r border-white/10 pr-4">
-            <motion.button 
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              className="p-2 rounded-full hover:bg-white/5 text-muted-foreground hover:text-white transition-colors relative group"
-            >
-              <Bell className="w-4.5 h-4.5" />
-              <span className="absolute top-1.5 right-1.5 w-1.5 h-1.5 bg-accent rounded-full border border-background shadow-[0_0_8px_rgba(0,180,216,0.8)]" />
-            </motion.button>
+            <div className="relative">
+              <motion.button 
+                onClick={() => setShowNotifications(!showNotifications)}
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                className="p-2 rounded-full hover:bg-white/5 text-muted-foreground hover:text-white transition-colors relative group cursor-pointer"
+              >
+                <Bell className="w-4.5 h-4.5" />
+                {notifications.length > 0 && (
+                  <span className="absolute top-1.5 right-1.5 w-1.5 h-1.5 bg-accent rounded-full border border-background shadow-[0_0_8px_rgba(0,180,216,0.8)]" />
+                )}
+              </motion.button>
+
+              <AnimatePresence>
+                {showNotifications && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 15 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: 15 }}
+                    className="absolute right-0 mt-2 w-80 bg-[#0d0d21]/95 border border-white/10 rounded-2xl p-4 shadow-[0_10px_30px_rgba(0,0,0,0.5)] backdrop-blur-xl z-50 text-xs font-sans text-left max-h-[350px] overflow-y-auto"
+                  >
+                    <div className="flex justify-between items-center mb-3 pb-2 border-b border-white/10">
+                      <span className="font-bold text-white uppercase font-mono tracking-wider">Government Alerts</span>
+                      <span className="text-[10px] text-primary font-mono">{notifications.length} Active</span>
+                    </div>
+                    <div className="space-y-3">
+                      {notifications.length === 0 ? (
+                        <p className="text-muted-foreground text-center py-4">No active alerts at the moment.</p>
+                      ) : (
+                        notifications.map((notif) => (
+                          <div key={notif.id} className="p-2.5 hover:bg-white/5 rounded-xl border border-white/5 transition-all">
+                            <div className="flex justify-between items-center gap-2 mb-1">
+                              <span className={`px-1.5 py-0.5 rounded text-[8px] font-black uppercase font-mono ${
+                                notif.severity === 'severe' ? 'bg-red-500/20 text-red-500 border border-red-500/30' :
+                                notif.severity === 'moderate' ? 'bg-orange-500/20 text-orange-500 border border-orange-500/30' :
+                                'bg-primary/20 text-primary border border-primary/30'
+                              }`}>
+                                {notif.type}
+                              </span>
+                              <span className="text-[8px] text-muted-foreground font-mono">{notif.state}</span>
+                            </div>
+                            <p className="font-bold text-white leading-snug">{notif.title}</p>
+                            <p className="text-[10px] text-gray-400 mt-1 line-clamp-2 leading-relaxed">{notif.message}</p>
+                            {notif.deadline && (
+                              <p className="text-[9px] text-accent mt-1.5 font-mono">Deadline: {notif.deadline}</p>
+                            )}
+                          </div>
+                        ))
+                      )}
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
             <motion.button 
               whileHover={{ scale: 1.05, rotate: 20 }}
               whileTap={{ scale: 0.95 }}
