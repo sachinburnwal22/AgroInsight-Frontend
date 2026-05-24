@@ -1,116 +1,91 @@
-# 🌾 AgroInsight Frontend
+# ⚛️ AgroInsight Frontend Client
 
-A modern, responsive dashboard UI for **AgroInsight** — an agricultural analytics platform that visualizes land holding, irrigation, and cropping patterns across India.
+[![Next.js](https://img.shields.io/badge/Next.js-16.2-black.svg?logo=nextdotjs&logoColor=white)](https://nextjs.org/)
+[![React](https://img.shields.io/badge/React-19-blue.svg?logo=react&logoColor=white)](https://react.dev/)
+[![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-v4-06B6D4.svg?logo=tailwindcss&logoColor=white)](https://tailwindcss.com/)
+[![Framer Motion](https://img.shields.io/badge/Framer_Motion-v12-0055FF.svg?logo=framer&logoColor=white)](https://www.framer.com/motion/)
 
----
-
-## 🚀 Tech Stack
-
-* ⚛️ React (Vite)
-* 🎨 Tailwind CSS
-* 🌍 React Leaflet (Map)
-* 📊 Recharts (Charts)
-* 🔗 Axios (API communication)
+A high-fidelity, cybernetic React client for **AgroInsight** featuring interactive maps, dynamic charts, real-time news tickers, and AI translations.
 
 ---
 
-## 🎯 Features
+## 🎨 Visual Highlights & Core Features
 
-* 📊 Interactive Dashboard
-* 🌍 India Map with State-level Insights
-* 📈 Data Visualization (Charts & Stats)
-* 💧 Irrigation Analysis
-* 🌾 Crop Distribution View
-* 🧠 Smart Insights Panel (AI-ready)
-* ⚡ Fast & Responsive UI
+### 📡 Real-Time AgriIntel Dashboard
+- **Horizontal Marquee Ticker**: Slowly animations critical notices (MSP rates, cyclone warnings) at `70s` per loop.
+- **Trending News Carousel**: Automatic fades and transitions showcasing hot agricultural articles.
+- **Glassmorphism Panels**: Modern UI layout with glowing neon borders (`hover:border-primary/50`), translucent cards, and custom cursor animations.
+
+### 🌐 Instant Localization (Multi-Language)
+- Dynamic UI language toggles for **English, Hindi, Punjabi, Bengali, and Tamil**.
+- Transcripts, scheme directions, and advisor cards automatically adapt to the farmer's dialect.
+
+### 🔊 Text-To-Speech (TTS) Narrator
+- Localized hands-free reader on the News Detail pages.
+- Leverages the browser's native **Web Speech API (`window.speechSynthesis`)** to read AI-simplified advisories aloud in the selected language.
 
 ---
 
-## 📂 Project Structure
+## 📂 Frontend Directory Details
 
 ```
-src/
- ├── components/
- │   ├── Dashboard.jsx
- │   ├── MapSection.jsx
- │   ├── InfoPanel.jsx
- │   ├── StatsCards.jsx
+frontend/
+ ├── app/
+ │    ├── layout.tsx           # Global layouts, cursors, and custom toast providers
+ │    ├── page.tsx             # Standard analytics landing dashboard
+ │    ├── agri-intel/
+ │    │    ├── page.tsx        # Main AgriIntel dashboard (news tabs, schemes lists, AI explainers)
+ │    │    └── news/
+ │    │         └── [id]/
+ │    │              └── page.tsx # News detailed view with TTS Audio Player & AI cards
+ │    └── crop-recommendation/ # Dynamic cropadvisor recommendations forms
  │
- ├── api.js
- ├── App.jsx
- ├── main.jsx
+ ├── components/
+ │    ├── ui/
+ │    │    ├── FloatingNavbar.tsx # Header navigation featuring interactive Alert Dropdown
+ │    │    ├── CustomCursor.tsx   # Cyberpunk custom cursor particle generator
+ │    │    └── BackgroundWrapper.tsx # Dynamic layout wrapper
+ │    └── map/                 # India Map, Leaflet widgets, and layers
+ │
+ └── context/                  # AuthContext and CartContext states managers
 ```
 
 ---
 
-## ⚙️ Setup Instructions
+## 🚀 Setup & Installation
 
-### 1. Install dependencies
+### 1. Configure backend connection
+Ensure `.env` contains the API reference:
+```env
+NEXT_PUBLIC_API_URL=http://127.0.0.1:8000
+```
 
+### 2. Install package libraries
 ```bash
 npm install
 ```
 
-### 2. Start development server
-
+### 3. Run development build
 ```bash
 npm run dev
 ```
+Open **`http://localhost:3000`** in your browser.
 
 ---
 
-## 🔗 API Configuration
-
-Update API base URL in:
+## 🧠 Dynamic Audio Narration Flow (TTS)
 
 ```
-src/api.js
+ [User Clicks Play] ---> [Check Browser Speech Synth Support]
+                                 |
+                                 v
+                     [Clean Markdown Tags from Text]
+                                 |
+                                 v
+                     [Map Chosen UI Language to Voice]
+                      (EN-IN, HI-IN, PA-IN, TA-IN, etc.)
+                                 |
+                                 v
+                     [Invoke window.speechSynthesis.speak()]
 ```
-
-```js
-baseURL: "http://127.0.0.1:8000/api"
-```
-
----
-
-## 🌍 Map Integration
-
-* Uses GeoJSON for India map
-* States are clickable & interactive
-* Dynamic data fetched from backend
-
----
-
-## 📊 Dashboard Data
-
-Data is fetched from backend APIs:
-
-* `/api/analytics`
-* `/api/regions`
-* `/api/regions/{id}`
-
----
-
-## 🎨 UI Highlights
-
-* Clean SaaS dashboard design
-* Responsive layout
-* Tailwind-based styling
-* Smooth interactions
-
----
-
-## 🔮 Future Enhancements
-
-* 🧠 AI-based recommendations
-* 📄 Export reports (PDF)
-* 📊 Advanced analytics charts
-* 🌡️ Weather integration
-
----
-
-## 👨‍💻 Author
-
-Developed as part of a full-stack project combining **data analytics + agriculture + visualization**
-
----
+*Note: This synthesis runs natively in Chrome, Safari, and Edge without external API requirements.*
