@@ -6,6 +6,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import axios from "axios";
+import { API_BASE_URL } from "@/lib/utils";
 import { 
   BarChart3, 
   Sprout, 
@@ -36,6 +37,10 @@ export default function FloatingNavbar() {
   const { scrollY } = useScroll();
 
   const [notifications, setNotifications] = useState<any[]>([]);
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => {
+    setMounted(true);
+  }, []);
   const [showNotifications, setShowNotifications] = useState(false);
 
   useEffect(() => {
@@ -43,7 +48,7 @@ export default function FloatingNavbar() {
       try {
         const token = localStorage.getItem("auth_token");
         const headers = token ? { Authorization: `Bearer ${token}` } : {};
-        const res = await axios.get("http://127.0.0.1:8000/api/alerts/government", { headers });
+        const res = await axios.get(`${API_BASE_URL}/api/alerts/government`, { headers });
         setNotifications(res.data.data || []);
       } catch (err) {
         console.error("Failed to fetch navbar notifications", err);
@@ -271,50 +276,63 @@ export default function FloatingNavbar() {
             </motion.button>
           </div>
 
-          {user ? (
-            /* Logged In State */
-            <div className="flex items-center gap-2">
-              <Link 
-                href="/profile" 
-                className="flex items-center gap-2.5 bg-white/5 hover:bg-white/10 p-1.5 pr-3 rounded-full transition-all cursor-pointer border border-white/5 hover:border-primary/30 group"
-              >
-                <div className="w-8 h-8 rounded-full bg-gradient-to-br from-primary/30 to-accent/30 flex items-center justify-center font-bold text-white overflow-hidden border border-white/10 group-hover:border-primary/50 transition-colors">
-                  {user.profile_image ? (
-                    <img src={`http://127.0.0.1:8000${user.profile_image}`} alt={user.name} className="w-full h-full object-cover" />
-                  ) : (
-                    user.name.charAt(0).toUpperCase()
-                  )}
-                </div>
-                <div className="hidden sm:block text-left text-xs">
-                  <p className="font-semibold text-white leading-tight">{user.name}</p>
-                  <p className="text-[10px] text-muted-foreground">{user.region || "Farmer"}</p>
-                </div>
-              </Link>
-              <motion.button 
-                onClick={logout} 
-                whileHover={{ scale: 1.05, backgroundColor: "rgba(239, 68, 68, 0.1)" }}
-                whileTap={{ scale: 0.95 }}
-                className="p-2 rounded-full hover:bg-destructive/10 text-muted-foreground hover:text-destructive transition-colors cursor-pointer border border-transparent hover:border-destructive/20"
-                title="Logout"
-              >
-                <LogOut className="w-4.5 h-4.5" />
-              </motion.button>
-            </div>
+          {mounted ? (
+            user ? (
+              /* Logged In State */
+              <div className="flex items-center gap-2">
+                <Link 
+                  href="/profile" 
+                  className="flex items-center gap-2.5 bg-white/5 hover:bg-white/10 p-1.5 pr-3 rounded-full transition-all cursor-pointer border border-white/5 hover:border-primary/30 group"
+                >
+                  <div className="w-8 h-8 rounded-full bg-gradient-to-br from-primary/30 to-accent/30 flex items-center justify-center font-bold text-white overflow-hidden border border-white/10 group-hover:border-primary/50 transition-colors">
+                    {user.profile_image ? (
+                      <img src={`${API_BASE_URL}${user.profile_image}`} alt={user.name} className="w-full h-full object-cover" />
+                    ) : (
+                      user.name.charAt(0).toUpperCase()
+                    )}
+                  </div>
+                  <div className="hidden sm:block text-left text-xs">
+                    <p className="font-semibold text-white leading-tight">{user.name}</p>
+                    <p className="text-[10px] text-muted-foreground">{user.region || "Farmer"}</p>
+                  </div>
+                </Link>
+                <motion.button 
+                  onClick={logout} 
+                  whileHover={{ scale: 1.05, backgroundColor: "rgba(239, 68, 68, 0.1)" }}
+                  whileTap={{ scale: 0.95 }}
+                  className="p-2 rounded-full hover:bg-destructive/10 text-muted-foreground hover:text-destructive transition-colors cursor-pointer border border-transparent hover:border-destructive/20"
+                  title="Logout"
+                >
+                  <LogOut className="w-4.5 h-4.5" />
+                </motion.button>
+              </div>
+            ) : (
+              /* Logged Out State with Glowing Cyber CTA */
+              <div className="flex items-center gap-4">
+                <Link href="/login" className="hidden sm:block text-sm font-semibold text-muted-foreground hover:text-white transition-colors">
+                  Sign In
+                </Link>
+                <Link href="/signup" className="relative group">
+                  {/* Background glow backplate */}
+                  <div className="absolute -inset-0.5 bg-gradient-to-r from-primary to-accent rounded-full blur-md opacity-75 group-hover:opacity-100 transition-opacity duration-300" />
+                  
+                  <button className="relative px-5 py-2.5 bg-black rounded-full text-white text-xs font-bold uppercase tracking-wider transition-all duration-300 group-hover:bg-transparent group-hover:text-black flex items-center gap-1.5 border border-white/10 group-hover:border-transparent select-none cursor-pointer">
+                    <span>Join Agro</span>
+                    <ChevronRight className="w-3.5 h-3.5 group-hover:translate-x-0.5 transition-transform" />
+                  </button>
+                </Link>
+              </div>
+            )
           ) : (
-            /* Logged Out State with Glowing Cyber CTA */
-            <div className="flex items-center gap-4">
-              <Link href="/login" className="hidden sm:block text-sm font-semibold text-muted-foreground hover:text-white transition-colors">
-                Sign In
-              </Link>
-              <Link href="/signup" className="relative group">
-                {/* Background glow backplate */}
-                <div className="absolute -inset-0.5 bg-gradient-to-r from-primary to-accent rounded-full blur-md opacity-75 group-hover:opacity-100 transition-opacity duration-300" />
-                
-                <button className="relative px-5 py-2.5 bg-black rounded-full text-white text-xs font-bold uppercase tracking-wider transition-all duration-300 group-hover:bg-transparent group-hover:text-black flex items-center gap-1.5 border border-white/10 group-hover:border-transparent select-none cursor-pointer">
+            /* SSR / Initial Hydration Placeholder: Render logged out structure but hidden */
+            <div className="flex items-center gap-4 opacity-0 pointer-events-none">
+              <span className="hidden sm:block text-sm font-semibold text-muted-foreground">Sign In</span>
+              <div className="relative group">
+                <button className="relative px-5 py-2.5 bg-black rounded-full text-white text-xs font-bold uppercase tracking-wider flex items-center gap-1.5 border border-white/10">
                   <span>Join Agro</span>
-                  <ChevronRight className="w-3.5 h-3.5 group-hover:translate-x-0.5 transition-transform" />
+                  <ChevronRight className="w-3.5 h-3.5" />
                 </button>
-              </Link>
+              </div>
             </div>
           )}
 
@@ -408,7 +426,7 @@ export default function FloatingNavbar() {
                       <div className="flex items-center gap-3 bg-white/5 p-3 rounded-2xl border border-white/10">
                         <div className="w-12 h-12 rounded-full bg-gradient-to-br from-primary/30 to-accent/30 flex items-center justify-center font-bold text-white overflow-hidden border border-white/10">
                           {user.profile_image ? (
-                            <img src={`http://127.0.0.1:8000${user.profile_image}`} alt={user.name} className="w-full h-full object-cover" />
+                            <img src={`${API_BASE_URL}${user.profile_image}`} alt={user.name} className="w-full h-full object-cover" />
                           ) : (
                             user.name.charAt(0).toUpperCase()
                           )}

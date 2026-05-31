@@ -1,10 +1,12 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import axios from "axios";
 import { useCart } from "@/context/CartContext";
+import { API_BASE_URL } from "@/lib/utils";
 import { useAuth } from "@/context/AuthContext";
+import { useMultiplayer } from "@/context/MultiplayerContext";
 import FloatingNavbar from "@/components/ui/FloatingNavbar";
 import MarketCanvas from "@/components/market/MarketCanvas";
 import ProductModal from "@/components/market/ProductModal";
@@ -138,8 +140,66 @@ function toggleAmbience(play: boolean) {
 }
 
 export default function AgriMarketPage() {
-  const { token } = useAuth();
+  const { token, user } = useAuth();
   const { cartCount, fetchCart } = useCart();
+  const { 
+    onlinePlayers, 
+    currentSession, 
+    chatMessages, 
+    lastInteraction, 
+    webrtcConnected, 
+    isMuted, 
+    sendMessage, 
+    emitMovement, 
+    emitInteraction, 
+    leaveSession, 
+    toggleMute 
+  } = useMultiplayer();
+
+  const [sessionTime, setSessionTime] = useState(0);
+  const timerRef = useRef<NodeJS.Timeout | null>(null);
+
+  const [chatOpen, setChatOpen] = useState(true);
+  const [chatInput, setChatInput] = useState("");
+  const chatEndRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (currentSession) {
+      setSessionTime(0);
+      timerRef.current = setInterval(() => {
+        setSessionTime((prev) => prev + 1);
+      }, 1000);
+    } else {
+      if (timerRef.current) {
+        clearInterval(timerRef.current);
+        timerRef.current = null;
+      }
+      setSessionTime(0);
+    }
+
+    return () => {
+      if (timerRef.current) clearInterval(timerRef.current);
+    };
+  }, [currentSession]);
+
+  useEffect(() => {
+    if (chatEndRef.current) {
+      chatEndRef.current.scrollIntoView({ behavior: 'smooth' });
+    }
+  }, [chatMessages, chatOpen]);
+
+  const formatTime = (seconds: number) => {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+  };
+
+  const handleSendChat = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!chatInput.trim()) return;
+    sendMessage(chatInput);
+    setChatInput("");
+  };
   
   const [shops, setShops] = useState<Shop[]>(FALLBACK_SHOPS);
   const [loadingShops, setLoadingShops] = useState(false);
@@ -168,7 +228,7 @@ export default function AgriMarketPage() {
     const fetchShops = async () => {
       setLoadingShops(true);
       try {
-        const res = await axios.get("http://127.0.0.1:8000/api/shops");
+        const res = await axios.get(`${API_BASE_URL}/api/shops`);
         if (res.data.status === "success" && Array.isArray(res.data.data)) {
           setShops(res.data.data);
         }
@@ -411,8 +471,161 @@ export default function AgriMarketPage() {
                 isNight={isNight}
                 nearShop={nearShop}
                 onNearShopChange={(shop) => setNearShop(shop)}
+                onlinePlayers={onlinePlayers}
+                onPlayerMove={(x, z, rotationY, animation) => {
+                  emitMovement(x, z, rotationY, animation);
+                }}
               />
             )}
+
+            {/* MULTIPLAYER HUD OVERLAY (Top-Left of the 3D frame) */}
+            {currentSession && (
+              <div className="absolute top-18 left-6 z-20 w-64 p-4 bg-[#06060e]/90 border border-[#00d084]/35 rounded-2xl backdrop-blur-md shadow-[0_0_20px_rgba(0,208,132,0.15)] text-left flex flex-col gap-3 font-sans">
+                <div className="flex justify-between items-center pb-2 border-b border-white/5">
+                  <span className="text-[9px] font-mono tracking-widest text-[#00d084] font-black uppercase">
+                    CO-EXPLORE SESSION
+                  </span>
+                  <span className="text-[10px] font-mono text-white font-bold bg-white/5 px-2 py-0.5 rounded">
+                    {formatTime(sessionTime)}
+                  </span>
+                </div>
+                
+                <div className="flex items-center gap-2.5">
+                  <div className="w-8 h-8 rounded-full bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400 font-bold text-sm">
+                    {onlinePlayers.length > 0 ? onlinePlayers[0].username.charAt(0).toUpperCase() : "?"}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <h5 className="font-bold text-xs text-white truncate">
+                      {onlinePlayers.length > 0 ? onlinePlayers[0].username : "Waiting for companion..."}
+                    </h5>
+                    <p className="text-[9px] text-slate-400 flex items-center gap-1 mt-0.5">
+                      <span className={`w-1.5 h-1.5 rounded-full ${webrtcConnected ? 'bg-emerald-500 animate-pulse' : 'bg-amber-500 animate-ping'}`} />
+                      <span>{webrtcConnected ? "Voice connected" : "Connecting voice..."}</span>
+                    </p>
+                  </div>
+                </div>
+
+                {/* Call Controls */}
+                <div className="grid grid-cols-2 gap-2 mt-1">
+                  <button
+                    onClick={toggleMute}
+                    className={`p-2 py-2.5 rounded-xl border flex items-center justify-center gap-1.5 font-mono text-[9px] font-bold uppercase transition-all cursor-pointer select-none ${
+                      isMuted 
+                        ? "bg-rose-500/10 border-rose-500/20 text-rose-400" 
+                        : "bg-white/5 border-white/10 hover:bg-white/10 text-white"
+                    }`}
+                    title={isMuted ? "Unmute Mic" : "Mute Mic"}
+                  >
+                    {isMuted ? (
+                      <>
+                        <VolumeX className="w-3.5 h-3.5" />
+                        <span>Muted</span>
+                      </>
+                    ) : (
+                      <>
+                        <Volume2 className="w-3.5 h-3.5" />
+                        <span>Mute</span>
+                      </>
+                    )}
+                  </button>
+                  <button
+                    onClick={leaveSession}
+                    className="p-2 py-2.5 bg-rose-500 hover:bg-rose-600 border border-rose-600/35 text-white rounded-xl flex items-center justify-center gap-1.5 font-mono text-[9px] font-bold uppercase transition-all cursor-pointer select-none"
+                  >
+                    <X className="w-3.5 h-3.5" />
+                    <span>Leave</span>
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* FLOATING MINI-CHAT PANEL (Bottom-Right of the 3D frame, above E prompt) */}
+            {currentSession && (
+              <div 
+                className={`absolute bottom-28 right-8 z-30 w-72 bg-[#06060e]/95 border border-white/10 rounded-2xl backdrop-blur-md shadow-2xl flex flex-col transition-all duration-300 ${
+                  chatOpen ? "h-80" : "h-11"
+                }`}
+              >
+                {/* Chat Header */}
+                <button
+                  onClick={() => setChatOpen(!chatOpen)}
+                  className="p-3 px-4 border-b border-white/5 bg-black/20 flex items-center justify-between text-left cursor-pointer select-none rounded-t-2xl w-full"
+                >
+                  <span className="text-[10px] font-mono tracking-widest text-primary font-black uppercase">
+                    📡 Session Chat
+                  </span>
+                  <span className="text-[10px] font-mono text-slate-400">
+                    {chatOpen ? "Collapse" : "Expand"}
+                  </span>
+                </button>
+
+                {/* Chat Body */}
+                {chatOpen && (
+                  <>
+                    <div className="flex-1 overflow-y-auto p-4 space-y-2.5 min-h-0 select-text scrollbar-thin">
+                      {chatMessages.length === 0 ? (
+                        <p className="text-[10px] text-slate-500 font-mono text-center py-6">
+                          No messages yet. Send a greeting!
+                        </p>
+                      ) : (
+                        chatMessages.map((msg) => {
+                          const isMe = msg.senderId === user?.id;
+                          return (
+                            <div key={msg.id} className={`flex flex-col ${isMe ? "items-end" : "items-start"}`}>
+                              <span className="text-[8px] font-mono text-slate-500 mb-0.5 px-1">
+                                {msg.senderName} • {msg.timestamp}
+                              </span>
+                              <div 
+                                className={`p-2 px-3 rounded-xl text-xs max-w-[85%] leading-normal ${
+                                  isMe 
+                                    ? "bg-primary text-black rounded-tr-sm font-semibold" 
+                                    : "bg-white/10 text-white border border-white/15 rounded-tl-sm"
+                                  }`}
+                              >
+                                {msg.message}
+                              </div>
+                            </div>
+                          );
+                        })
+                      )}
+                      <div ref={chatEndRef} />
+                    </div>
+
+                    {/* Chat Input Footer */}
+                    <form onSubmit={handleSendChat} className="p-3 border-t border-white/5 bg-black/25 rounded-b-2xl flex gap-1.5">
+                      <input
+                        type="text"
+                        placeholder="Type companion message..."
+                        value={chatInput}
+                        onChange={(e) => setChatInput(e.target.value)}
+                        className="flex-1 bg-[#0b0b14] border border-white/10 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-primary/50"
+                      />
+                      <button
+                        type="submit"
+                        disabled={!chatInput.trim()}
+                        className="px-3 bg-primary hover:bg-primary/95 text-black font-black text-xs rounded-xl transition-all cursor-pointer disabled:opacity-50 select-none"
+                      >
+                        Send
+                      </button>
+                    </form>
+                  </>
+                )}
+              </div>
+            )}
+
+            {/* PARTNER INTERACTION ALERTS (Top Center Overlay) */}
+            <AnimatePresence>
+              {lastInteraction && (
+                <motion.div
+                  initial={{ opacity: 0, y: -20, x: "-50%" }}
+                  animate={{ opacity: 1, y: 0, x: "-50%" }}
+                  exit={{ opacity: 0, y: -20, x: "-50%" }}
+                  className="absolute top-18 left-1/2 -translate-x-1/2 z-20 px-4 py-2 bg-[#05140d]/90 border border-emerald-500/35 rounded-full backdrop-blur-sm text-center text-[10px] font-mono text-emerald-400 font-semibold shadow-[0_0_15px_rgba(0,208,132,0.2)] animate-pulse"
+                >
+                  🛰️ {lastInteraction}
+                </motion.div>
+              )}
+            </AnimatePresence>
 
             {/* Visual joystick overlay on the bottom-left corner matching the image */}
             <div className="absolute bottom-8 left-8 z-20 w-24 h-24 rounded-full bg-black/60 border border-white/10 backdrop-blur-sm pointer-events-none flex items-center justify-center shadow-lg">
@@ -572,7 +785,9 @@ export default function AgriMarketPage() {
                   initial={{ opacity: 0, x: -20 }}
                   animate={{ opacity: 1, x: 0 }}
                   exit={{ opacity: 0, x: -20 }}
-                  className="absolute top-18 left-6 z-20 w-44 p-4 bg-[#06060e]/85 border border-white/10 rounded-2xl backdrop-blur-md shadow-xl text-left"
+                  className={`absolute left-6 z-20 w-44 p-4 bg-[#06060e]/85 border border-white/10 rounded-2xl backdrop-blur-md shadow-xl text-left ${
+                    currentSession ? "top-[280px]" : "top-18"
+                  }`}
                 >
                   <h4 className="text-[10px] font-mono font-black uppercase text-[#888] tracking-widest mb-3 pb-1.5 border-b border-white/5">
                     Movement Guide

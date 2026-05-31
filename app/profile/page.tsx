@@ -8,6 +8,7 @@ import axios from "axios";
 import { useAuth } from "@/context/AuthContext";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
+import { API_BASE_URL } from "@/lib/utils";
 
 export default function ProfilePage() {
   const { user, token, logout, updateUser, loading: authLoading } = useAuth();
@@ -39,7 +40,7 @@ export default function ProfilePage() {
         region: user.region,
       });
       if (user.profile_image) {
-        setPreviewImage(`http://127.0.0.1:8000${user.profile_image}`);
+        setPreviewImage(`${API_BASE_URL}${user.profile_image}`);
       }
       
       // Use dynamic stats from backend
@@ -71,7 +72,7 @@ export default function ProfilePage() {
     }
 
     try {
-      const response = await axios.post("http://127.0.0.1:8000/api/user/update", data, {
+      const response = await axios.post(`${API_BASE_URL}/api/user/update`, data, {
         headers: {
           Authorization: `Bearer ${token}`,
           "Content-Type": "multipart/form-data",

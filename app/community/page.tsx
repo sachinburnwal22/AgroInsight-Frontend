@@ -7,6 +7,7 @@ import Link from "next/link";
 import axios from "axios";
 import { useAuth } from "@/context/AuthContext";
 import { toast } from "sonner";
+import { API_BASE_URL } from "@/lib/utils";
 
 export default function CommunityPage() {
   const { token, user } = useAuth();
@@ -23,9 +24,12 @@ export default function CommunityPage() {
   }, [token]);
 
   const fetchCommunities = async () => {
-    if (!token) return;
+    if (!token) {
+      setLoading(false);
+      return;
+    }
     try {
-      const response = await axios.get("http://127.0.0.1:8000/api/communities", {
+      const response = await axios.get(`${API_BASE_URL}/api/communities`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       setCommunities(response.data);
@@ -39,7 +43,7 @@ export default function CommunityPage() {
   const handleJoinLeave = async (communityId: number, isMember: boolean) => {
     try {
       const endpoint = isMember ? '/api/community/leave' : '/api/community/join';
-      await axios.post(`http://127.0.0.1:8000${endpoint}`, { community_id: communityId }, {
+      await axios.post(`${API_BASE_URL}${endpoint}`, { community_id: communityId }, {
         headers: { Authorization: `Bearer ${token}` }
       });
       
@@ -64,7 +68,7 @@ export default function CommunityPage() {
     e.preventDefault();
     setIsCreating(true);
     try {
-      const response = await axios.post("http://127.0.0.1:8000/api/communities", newCommunity, {
+      const response = await axios.post(`${API_BASE_URL}/api/communities`, newCommunity, {
         headers: { Authorization: `Bearer ${token}` }
       });
       
@@ -89,6 +93,31 @@ export default function CommunityPage() {
     return (
       <div className="h-[60vh] flex items-center justify-center">
         <Loader2 className="w-10 h-10 text-primary animate-spin" />
+      </div>
+    );
+  }
+
+  if (!token || !user) {
+    return (
+      <div className="h-[60vh] flex flex-col items-center justify-center text-center max-w-md mx-auto space-y-6">
+        <div className="w-16 h-16 rounded-2xl bg-primary/10 border border-primary/20 flex items-center justify-center text-primary text-xl shadow-[0_0_15px_rgba(0,208,132,0.1)]">
+          🔒
+        </div>
+        <div className="space-y-2">
+          <h2 className="text-2xl font-bold text-white uppercase font-mono tracking-wider">Access Restricted</h2>
+          <p className="text-sm text-slate-400 leading-relaxed">
+            Please log in or register a new farmer profile to explore regional farming communities, ask agricultural questions, and join discussions.
+          </p>
+        </div>
+        <Link href="/login" className="w-full">
+          <motion.button
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
+            className="w-full py-3.5 bg-primary hover:bg-primary/95 text-black font-black text-xs uppercase tracking-wider rounded-xl transition-all shadow-[0_0_15px_rgba(0,208,132,0.3)] cursor-pointer select-none"
+          >
+            Sign In / Get Started
+          </motion.button>
+        </Link>
       </div>
     );
   }

@@ -7,6 +7,7 @@ import Link from "next/link";
 import axios from "axios";
 import { useAuth } from "@/context/AuthContext";
 import { toast } from "sonner";
+import { API_BASE_URL } from "@/lib/utils";
 
 export default function LoginPage() {
   const { login } = useAuth();
@@ -27,7 +28,7 @@ export default function LoginPage() {
     e.preventDefault();
     setLoading(true);
     try {
-      const response = await axios.post("http://127.0.0.1:8000/api/login", formData);
+      const response = await axios.post(`${API_BASE_URL}/api/login`, formData);
       toast.success("Welcome back!");
       login(response.data.token, response.data.user);
     } catch (error: any) {

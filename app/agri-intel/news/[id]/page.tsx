@@ -4,6 +4,7 @@ import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import axios from "axios";
 import { useAuth } from "@/context/AuthContext";
+import { API_BASE_URL } from "@/lib/utils";
 import FloatingNavbar from "@/components/ui/FloatingNavbar";
 import {
   ChevronLeft,
@@ -71,7 +72,7 @@ export default function NewsDetailPage() {
       // Since we retrieve live articles, we can fetch all news from live endpoint and locate this article
       // Or query database for it
       // Let's retrieve live news, and filter the match
-      const newsRes = await axios.get("http://127.0.0.1:8000/api/news/live", { headers });
+      const newsRes = await axios.get(`${API_BASE_URL}/api/news/live`, { headers });
       const articlesList = newsRes.data.data?.data || [];
       const matched = articlesList.find((a: any) => String(a.id) === String(articleId));
       
@@ -81,7 +82,7 @@ export default function NewsDetailPage() {
         
         // Check if saved
         if (token) {
-          const savedRes = await axios.get("http://127.0.0.1:8000/api/articles/saved", { headers });
+          const savedRes = await axios.get(`${API_BASE_URL}/api/articles/saved`, { headers });
           const isSavedArticle = (savedRes.data.data || []).some((art: any) => String(art.id) === String(articleId));
           setIsSaved(isSavedArticle);
         }
@@ -105,7 +106,7 @@ export default function NewsDetailPage() {
       const headers = token ? { Authorization: `Bearer ${token}` } : {};
 
       const res = await axios.post(
-        `http://127.0.0.1:8000/api/news/${articleId}/ai-summary`,
+        `${API_BASE_URL}/api/news/${articleId}/ai-summary`,
         { language: lang },
         { headers }
       );
@@ -141,7 +142,7 @@ export default function NewsDetailPage() {
 
     try {
       const res = await axios.post(
-        "http://127.0.0.1:8000/api/articles/save",
+        `${API_BASE_URL}/api/articles/save`,
         { article_id: article.id },
         { headers: { Authorization: `Bearer ${token}` } }
       );

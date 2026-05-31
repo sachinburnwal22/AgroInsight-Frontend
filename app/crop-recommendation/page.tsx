@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import dynamic from "next/dynamic";
 import axios from "axios";
 import { useAuth } from "@/context/AuthContext";
+import { API_BASE_URL } from "@/lib/utils";
 import FloatingNavbar from "@/components/ui/FloatingNavbar";
 import { 
   Sprout, 
@@ -132,7 +133,7 @@ export default function CropAdvisorPage() {
         try {
           const headers = token ? { Authorization: `Bearer ${token}` } : {};
           await axios.post(
-            "http://127.0.0.1:8000/api/location/update",
+            `${API_BASE_URL}/api/location/update`,
             { latitude, longitude, current_region: resolvedRegion },
             { headers }
           );
@@ -155,7 +156,7 @@ export default function CropAdvisorPage() {
   // Live Weather Fetcher
   const fetchLiveWeather = async (latitude: number, longitude: number) => {
     try {
-      const res = await axios.get("http://127.0.0.1:8000/api/weather/live", {
+      const res = await axios.get(`${API_BASE_URL}/api/weather/live`, {
         params: { latitude, longitude }
       });
       if (res.data.status === "success" || res.data.status === "mock_success") {
@@ -175,7 +176,7 @@ export default function CropAdvisorPage() {
   const fetchWeatherAlerts = async (latitude: number, longitude: number, simType: string, region: string) => {
     setLoadingAlert(true);
     try {
-      const res = await axios.get("http://127.0.0.1:8000/api/weather/alerts", {
+      const res = await axios.get(`${API_BASE_URL}/api/weather/alerts`, {
         params: {
           latitude,
           longitude,
@@ -267,7 +268,7 @@ export default function CropAdvisorPage() {
     setProductRecs([]);
 
     try {
-      const res = await axios.get("http://127.0.0.1:8000/api/crop/recommendations", {
+      const res = await axios.get(`${API_BASE_URL}/api/crop/recommendations`, {
         params: {
           latitude: coords.lat,
           longitude: coords.lng,
@@ -298,7 +299,7 @@ export default function CropAdvisorPage() {
   const fetchProductRecommendations = async (cropsList: string) => {
     setLoadingProducts(true);
     try {
-      const res = await axios.get("http://127.0.0.1:8000/api/product/recommendations", {
+      const res = await axios.get(`${API_BASE_URL}/api/product/recommendations`, {
         params: { crops: cropsList }
       });
       if (res.data.status === "success") {

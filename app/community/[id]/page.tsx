@@ -9,7 +9,9 @@ import {
 } from "lucide-react";
 import axios from "axios";
 import { useAuth } from "@/context/AuthContext";
+import { useMultiplayer } from "@/context/MultiplayerContext";
 import { toast } from "sonner";
+import { API_BASE_URL } from "@/lib/utils";
 import { formatDistanceToNow } from "date-fns";
 import Link from "next/link";
 
@@ -17,8 +19,19 @@ export default function CommunityFeed({ params }: { params: Promise<{ id: string
   const resolvedParams = use(params);
   const communityId = resolvedParams.id;
   const { token, user } = useAuth();
+  const { sendInvite } = useMultiplayer();
   
   const [activeTab, setActiveTab] = useState<'feed' | 'members' | 'chat'>('feed');
+  const [sendingInviteMap, setSendingInviteMap] = useState<{[key: number]: boolean}>({});
+
+  const handleSendInvite = async (memberId: number) => {
+    setSendingInviteMap(prev => ({ ...prev, [memberId]: true }));
+    const success = await sendInvite(memberId);
+    setSendingInviteMap(prev => ({ ...prev, [memberId]: false }));
+    if (success) {
+      toast.success("Invitation sent in real-time!");
+    }
+  };
   
   // Community Details State
   const [community, setCommunity] = useState<any>(null);
@@ -68,7 +81,7 @@ export default function CommunityFeed({ params }: { params: Promise<{ id: string
 
   const fetchCommunityDetails = async () => {
     try {
-      const response = await axios.get(`http://127.0.0.1:8000/api/communities/${communityId}`, {
+      const response = await axios.get(`${API_BASE_URL}/api/communities/${communityId}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       setCommunity(response.data);
@@ -79,7 +92,7 @@ export default function CommunityFeed({ params }: { params: Promise<{ id: string
 
   const fetchPosts = async () => {
     try {
-      const response = await axios.get(`http://127.0.0.1:8000/api/posts/${communityId}`, {
+      const response = await axios.get(`${API_BASE_URL}/api/posts/${communityId}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       setPosts(response.data);
@@ -92,7 +105,7 @@ export default function CommunityFeed({ params }: { params: Promise<{ id: string
 
   const fetchChatMessages = async () => {
     try {
-      const response = await axios.get(`http://127.0.0.1:8000/api/community/${communityId}/chat`, {
+      const response = await axios.get(`${API_BASE_URL}/api/community/${communityId}/chat`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       setChatMessages(response.data);
@@ -121,7 +134,7 @@ export default function CommunityFeed({ params }: { params: Promise<{ id: string
     }
 
     try {
-      const response = await axios.post("http://127.0.0.1:8000/api/posts", formData, {
+      const response = await axios.post(`${API_BASE_URL}/api/posts`, formData, {
         headers: { 
           Authorization: `Bearer ${token}`,
           "Content-Type": "multipart/form-data" 
@@ -141,7 +154,7 @@ export default function CommunityFeed({ params }: { params: Promise<{ id: string
 
   const handleLike = async (postId: number) => {
     try {
-      const response = await axios.post(`http://127.0.0.1:8000/api/posts/${postId}/like`, {}, {
+      const response = await axios.post(`${API_BASE_URL}/api/posts/${postId}/like`, {}, {
         headers: { Authorization: `Bearer ${token}` }
       });
       
@@ -171,7 +184,7 @@ export default function CommunityFeed({ params }: { params: Promise<{ id: string
     if (!commentContent.trim()) return;
     setIsCommenting(true);
     try {
-      const response = await axios.post("http://127.0.0.1:8000/api/comments", {
+      const response = await axios.post(`${API_BASE_URL}/api/comments`, {
         post_id: postId,
         content: commentContent
       }, {
@@ -194,7 +207,7 @@ export default function CommunityFeed({ params }: { params: Promise<{ id: string
 
   const handleDeletePost = async (postId: number) => {
     try {
-      await axios.delete(`http://127.0.0.1:8000/api/posts/${postId}`, {
+      await axios.delete(`${API_BASE_URL}/api/posts/${postId}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       setPosts(posts.filter(p => p.id !== postId));
@@ -206,7 +219,7 @@ export default function CommunityFeed({ params }: { params: Promise<{ id: string
 
   const handleDeleteComment = async (postId: number, commentId: number) => {
     try {
-      await axios.delete(`http://127.0.0.1:8000/api/comments/${commentId}`, {
+      await axios.delete(`${API_BASE_URL}/api/comments/${commentId}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       setPosts(posts.map(post => {
@@ -224,7 +237,7 @@ export default function CommunityFeed({ params }: { params: Promise<{ id: string
   const getAiSuggestion = async (postId: number, content: string, region: string) => {
     setLoadingAi({ ...loadingAi, [postId]: true });
     try {
-      const response = await axios.post("http://127.0.0.1:8000/api/ai/suggest", {
+      const response = await axios.post(`${API_BASE_URL}/api/ai/suggest`, {
         content,
         region
       }, {
@@ -255,7 +268,7 @@ export default function CommunityFeed({ params }: { params: Promise<{ id: string
     setNewChatMessage("");
 
     try {
-      await axios.post(`http://127.0.0.1:8000/api/community/${communityId}/chat`, {
+      await axios.post(`${API_BASE_URL}/api/community/${communityId}/chat`, {
         content: tempMessage.content
       }, {
         headers: { Authorization: `Bearer ${token}` }
@@ -325,7 +338,7 @@ export default function CommunityFeed({ params }: { params: Promise<{ id: string
               <div className="flex gap-4">
                 <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary to-accent shrink-0 flex items-center justify-center font-bold text-black border-2 border-[#1a1a2e] overflow-hidden">
                   {user?.profile_image ? (
-                    <img src={`http://127.0.0.1:8000${user.profile_image}`} className="w-full h-full object-cover" />
+                    <img src={`${API_BASE_URL}${user.profile_image}`} className="w-full h-full object-cover" />
                   ) : (
                     user?.name?.charAt(0) || "U"
                   )}
@@ -392,7 +405,7 @@ export default function CommunityFeed({ params }: { params: Promise<{ id: string
                         <div className="flex gap-3">
                           <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary/30 to-accent/30 flex items-center justify-center font-bold text-white border border-white/10 overflow-hidden">
                             {post.user.profile_image ? (
-                              <img src={`http://127.0.0.1:8000${post.user.profile_image}`} className="w-full h-full object-cover" />
+                              <img src={`${API_BASE_URL}${post.user.profile_image}`} className="w-full h-full object-cover" />
                             ) : post.user.name.charAt(0)}
                           </div>
                           <div>
@@ -419,7 +432,7 @@ export default function CommunityFeed({ params }: { params: Promise<{ id: string
                         <p className="text-white/90 whitespace-pre-wrap">{post.content}</p>
                         {post.image && (
                           <div className="mt-4 rounded-xl overflow-hidden border border-white/10">
-                            <img src={`http://127.0.0.1:8000${post.image}`} className="w-full max-h-[500px] object-cover" />
+                            <img src={`${API_BASE_URL}${post.image}`} className="w-full max-h-[500px] object-cover" />
                           </div>
                         )}
                       </div>
@@ -478,7 +491,7 @@ export default function CommunityFeed({ params }: { params: Promise<{ id: string
                                   <div key={comment.id} className="flex gap-3">
                                     <div className="w-8 h-8 rounded-full bg-white/5 shrink-0 overflow-hidden">
                                       {comment.user.profile_image ? (
-                                        <img src={`http://127.0.0.1:8000${comment.user.profile_image}`} className="w-full h-full object-cover" />
+                                        <img src={`${API_BASE_URL}${comment.user.profile_image}`} className="w-full h-full object-cover" />
                                       ) : (
                                         <div className="w-full h-full flex items-center justify-center font-bold text-muted-foreground text-xs">{comment.user.name.charAt(0)}</div>
                                       )}
@@ -523,7 +536,7 @@ export default function CommunityFeed({ params }: { params: Promise<{ id: string
               <div key={member.id} className="bg-card/40 backdrop-blur-xl border border-white/10 rounded-2xl p-6 flex flex-col items-center text-center">
                 <div className="w-20 h-20 rounded-full border-4 border-[#1a1a2e] shadow-lg mb-4 overflow-hidden bg-gradient-to-br from-primary/30 to-accent/30 flex items-center justify-center">
                   {member.profile_image ? (
-                    <img src={`http://127.0.0.1:8000${member.profile_image}`} className="w-full h-full object-cover" />
+                    <img src={`${API_BASE_URL}${member.profile_image}`} className="w-full h-full object-cover" />
                   ) : (
                     <span className="text-2xl font-bold text-white">{member.name.charAt(0)}</span>
                   )}
@@ -532,8 +545,20 @@ export default function CommunityFeed({ params }: { params: Promise<{ id: string
                 <p className="text-sm text-muted-foreground flex items-center justify-center gap-1 mt-1">
                   <MapPin className="w-3 h-3" /> {member.region}
                 </p>
-                {member.id === user?.id && (
+                {member.id === user?.id ? (
                   <span className="mt-4 px-3 py-1 bg-primary/20 text-primary text-xs font-bold rounded-full">You</span>
+                ) : (
+                  <button
+                    onClick={() => handleSendInvite(member.id)}
+                    disabled={sendingInviteMap[member.id]}
+                    className="mt-4 px-4 py-2 bg-gradient-to-r from-primary to-accent hover:from-primary/95 text-black font-black text-[11px] rounded-xl transition-all cursor-pointer flex items-center gap-1.5 shadow-[0_0_10px_rgba(0,208,132,0.15)] disabled:opacity-50 select-none border border-white/10"
+                  >
+                    {sendingInviteMap[member.id] ? (
+                      <Loader2 className="w-3 h-3 animate-spin" />
+                    ) : (
+                      <span>Invite to AgriMarket</span>
+                    )}
+                  </button>
                 )}
               </div>
             ))}

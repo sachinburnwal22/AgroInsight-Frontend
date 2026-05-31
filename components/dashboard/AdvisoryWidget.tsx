@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import axios from "axios";
+import { API_BASE_URL } from "@/lib/utils";
 import { 
   ShieldAlert, 
   Sprout, 
@@ -46,7 +47,7 @@ export default function AdvisoryWidget() {
     setLoading(true);
     try {
       // Fetch live weather
-      const wRes = await axios.get("http://127.0.0.1:8000/api/weather/live", {
+      const wRes = await axios.get(`${API_BASE_URL}/api/weather/live`, {
         params: { latitude: lat, longitude: lng }
       });
       if (wRes.data.status === "success" || wRes.data.status === "mock_success") {
@@ -54,7 +55,7 @@ export default function AdvisoryWidget() {
       }
 
       // Fetch live alerts
-      const aRes = await axios.get("http://127.0.0.1:8000/api/weather/alerts", {
+      const aRes = await axios.get(`${API_BASE_URL}/api/weather/alerts`, {
         params: {
           latitude: lat,
           longitude: lng,
@@ -69,7 +70,7 @@ export default function AdvisoryWidget() {
       }
 
       // Fetch crop suggestions
-      const cRes = await axios.get("http://127.0.0.1:8000/api/crop/recommendations", {
+      const cRes = await axios.get(`${API_BASE_URL}/api/crop/recommendations`, {
         params: {
           latitude: lat,
           longitude: lng,

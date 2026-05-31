@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+import { API_BASE_URL } from "@/lib/utils";
 import dynamic from "next/dynamic";
 import { motion } from "framer-motion";
 import InfoPanel from "./InfoPanel";
@@ -32,7 +33,7 @@ export default function MapSection() {
       setLoading(true);
       try {
         // Fetch all regions to match the name
-        const res = await fetch("http://127.0.0.1:8000/api/regions");
+        const res = await fetch(`${API_BASE_URL}/api/regions`);
         const json = await res.json();
         
         // Find the region matching the state name (case insensitive)

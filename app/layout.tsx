@@ -4,9 +4,11 @@ import { Analytics } from '@vercel/analytics/next'
 import { Toaster } from 'sonner'
 import { AuthProvider } from '@/context/AuthContext'
 import { CartProvider } from '@/context/CartContext'
+import { MultiplayerProvider } from '@/context/MultiplayerContext'
 import CustomCursor from '@/components/ui/CustomCursor'
 import BackgroundWrapper from '@/components/ui/BackgroundWrapper'
 import './globals.css'
+import { Suspense } from 'react'
 
 const _geist = Geist({ subsets: ["latin"] });
 const _geistMono = Geist_Mono({ subsets: ["latin"] });
@@ -56,10 +58,14 @@ export default function RootLayout({
         <CustomCursor />
         <AuthProvider>
           <CartProvider>
-            <BackgroundWrapper>
-              {children}
-            </BackgroundWrapper>
-            <Toaster theme="dark" position="top-right" />
+            <Suspense fallback={null}>
+              <MultiplayerProvider>
+                <BackgroundWrapper>
+                  {children}
+                </BackgroundWrapper>
+                <Toaster theme="dark" position="top-right" />
+              </MultiplayerProvider>
+            </Suspense>
           </CartProvider>
         </AuthProvider>
         {process.env.NODE_ENV === 'production' && <Analytics />}

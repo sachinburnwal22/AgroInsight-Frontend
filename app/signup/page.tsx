@@ -7,6 +7,7 @@ import Link from "next/link";
 import axios from "axios";
 import { useAuth } from "@/context/AuthContext";
 import { toast } from "sonner";
+import { API_BASE_URL } from "@/lib/utils";
 
 export default function SignupPage() {
   const { login } = useAuth();
@@ -45,7 +46,7 @@ export default function SignupPage() {
     try {
       // For this UI, we just send JSON to register endpoint. 
       // ID is just for show as requested.
-      const response = await axios.post("http://127.0.0.1:8000/api/register", formData);
+      const response = await axios.post(`${API_BASE_URL}/api/register`, formData);
       toast.success("Account created successfully!");
       login(response.data.token, response.data.user);
     } catch (error: any) {

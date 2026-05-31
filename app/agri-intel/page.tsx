@@ -4,6 +4,7 @@ import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import axios from "axios";
 import { useAuth } from "@/context/AuthContext";
+import { API_BASE_URL } from "@/lib/utils";
 import FloatingNavbar from "@/components/ui/FloatingNavbar";
 import {
   Newspaper,
@@ -206,14 +207,14 @@ export default function AgriIntelPage() {
       if (selectedCategory) newsParams.category = selectedCategory;
       if (searchQuery) newsParams.search = searchQuery;
 
-      const newsRes = await axios.get("http://127.0.0.1:8000/api/news/live", {
+      const newsRes = await axios.get(`${API_BASE_URL}/api/news/live`, {
         headers,
         params: newsParams
       });
       setNewsList(newsRes.data.data?.data || []);
 
       // 2. Fetch trending
-      const trendingRes = await axios.get("http://127.0.0.1:8000/api/news/trending", { headers });
+      const trendingRes = await axios.get(`${API_BASE_URL}/api/news/trending`, { headers });
       setTrendingNews(trendingRes.data.data || []);
 
       // 3. Fetch schemes
@@ -222,19 +223,19 @@ export default function AgriIntelPage() {
       if (selectedCategory) schemeParams.category = selectedCategory;
       if (searchQuery) schemeParams.search = searchQuery;
 
-      const schemesRes = await axios.get("http://127.0.0.1:8000/api/schemes/all", {
+      const schemesRes = await axios.get(`${API_BASE_URL}/api/schemes/all`, {
         headers,
         params: schemeParams
       });
       setSchemesList(schemesRes.data.data || []);
 
       // 4. Fetch alerts
-      const alertsRes = await axios.get("http://127.0.0.1:8000/api/alerts/government", { headers });
+      const alertsRes = await axios.get(`${API_BASE_URL}/api/alerts/government`, { headers });
       setAlerts(alertsRes.data.data || []);
 
       // 5. Fetch saved article ids if logged in
       if (token) {
-        const savedRes = await axios.get("http://127.0.0.1:8000/api/articles/saved", { headers });
+        const savedRes = await axios.get(`${API_BASE_URL}/api/articles/saved`, { headers });
         const ids = (savedRes.data.data || []).map((art: any) => art.id);
         setSavedArticleIds(ids);
       }
@@ -272,7 +273,7 @@ export default function AgriIntelPage() {
       const headers = token ? { Authorization: `Bearer ${token}` } : {};
       
       toast.info("Connecting to Agricultural open portals...");
-      const res = await axios.get("http://127.0.0.1:8000/api/news/live", { headers });
+      const res = await axios.get(`${API_BASE_URL}/api/news/live`, { headers });
       setNewsList(res.data.data?.data || []);
       toast.success("Intelligence feed updated from live API sources.");
     } catch (err) {
@@ -292,7 +293,7 @@ export default function AgriIntelPage() {
 
     try {
       const res = await axios.post(
-        "http://127.0.0.1:8000/api/articles/save",
+        `${API_BASE_URL}/api/articles/save`,
         { article_id: articleId },
         { headers: { Authorization: `Bearer ${token}` } }
       );
@@ -322,7 +323,7 @@ export default function AgriIntelPage() {
       const headers = token ? { Authorization: `Bearer ${token}` } : {};
       
       const res = await axios.post(
-        `http://127.0.0.1:8000/api/schemes/${scheme.id}/explain`,
+        `${API_BASE_URL}/api/schemes/${scheme.id}/explain`,
         { language },
         { headers }
       );
@@ -345,7 +346,7 @@ export default function AgriIntelPage() {
       const headers = token ? { Authorization: `Bearer ${token}` } : {};
       
       const res = await axios.post(
-        `http://127.0.0.1:8000/api/schemes/${selectedScheme.id}/explain`,
+        `${API_BASE_URL}/api/schemes/${selectedScheme.id}/explain`,
         { language: lang },
         { headers }
       );

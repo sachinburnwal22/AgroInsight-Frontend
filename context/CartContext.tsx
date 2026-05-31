@@ -4,6 +4,7 @@ import React, { createContext, useContext, useState, useEffect, ReactNode } from
 import axios from "axios";
 import { useAuth } from "./AuthContext";
 import { toast } from "sonner";
+import { API_BASE_URL } from "@/lib/utils";
 
 interface Product {
   id: number;
@@ -58,7 +59,7 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
     if (!token) return;
     setLoading(true);
     try {
-      const res = await axios.get("http://127.0.0.1:8000/api/cart", {
+      const res = await axios.get(`${API_BASE_URL}/api/cart`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       if (res.data.status === "success") {
@@ -78,7 +79,7 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
     }
     try {
       const res = await axios.post(
-        "http://127.0.0.1:8000/api/cart/add",
+        `${API_BASE_URL}/api/cart/add`,
         { product_id: productId, quantity },
         { headers: { Authorization: `Bearer ${token}` } }
       );
@@ -98,7 +99,7 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
   const removeFromCart = async (cartItemId: number): Promise<boolean> => {
     if (!token) return false;
     try {
-      const res = await axios.delete(`http://127.0.0.1:8000/api/cart/remove/${cartItemId}`, {
+      const res = await axios.delete(`${API_BASE_URL}/api/cart/remove/${cartItemId}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       if (res.data.status === "success") {
@@ -138,7 +139,7 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
     try {
       // 1. Create Razorpay/Mock Order in Backend
       const orderRes = await axios.post(
-        "http://127.0.0.1:8000/api/payment/create-order",
+        `${API_BASE_URL}/api/payment/create-order`,
         {},
         { headers: { Authorization: `Bearer ${token}` } }
       );
@@ -156,7 +157,7 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
         setTimeout(async () => {
           try {
             const verifyRes = await axios.post(
-              "http://127.0.0.1:8000/api/payment/verify",
+              `${API_BASE_URL}/api/payment/verify`,
               {
                 razorpay_order_id: orderData.razorpay_order_id,
                 razorpay_payment_id: "pay_mock_" + Math.random().toString(36).substring(2, 11),
@@ -199,7 +200,7 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
           setIsCheckingOut(true);
           try {
             const verifyRes = await axios.post(
-              "http://127.0.0.1:8000/api/payment/verify",
+              `${API_BASE_URL}/api/payment/verify`,
               {
                 razorpay_order_id: response.razorpay_order_id,
                 razorpay_payment_id: response.razorpay_payment_id,

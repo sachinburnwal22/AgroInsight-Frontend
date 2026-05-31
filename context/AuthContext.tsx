@@ -4,6 +4,7 @@ import { createContext, useContext, useState, useEffect, ReactNode } from "react
 import axios from "axios";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
+import { API_BASE_URL } from "@/lib/utils";
 
 interface User {
   id: number;
@@ -45,7 +46,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const fetchUser = async (authToken: string) => {
     try {
-      const response = await axios.get("http://127.0.0.1:8000/api/user", {
+      const response = await axios.get(`${API_BASE_URL}/api/user`, {
         headers: { Authorization: `Bearer ${authToken}` },
       });
       setUser(response.data.user);
@@ -70,7 +71,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const logout = async () => {
     try {
       await axios.post(
-        "http://127.0.0.1:8000/api/logout",
+        `${API_BASE_URL}/api/logout`,
         {},
         {
           headers: { Authorization: `Bearer ${token}` },

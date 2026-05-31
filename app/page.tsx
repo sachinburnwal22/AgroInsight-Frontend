@@ -24,6 +24,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
 import axios from "axios";
 import dynamic from "next/dynamic";
+import { API_BASE_URL } from "@/lib/utils";
 import { useAuth } from "@/context/AuthContext";
 import Particles from "@/components/ui/Particles";
 import MapSection from "@/components/map/MapSection";
@@ -96,7 +97,7 @@ export default function Dashboard() {
       try {
         const token = localStorage.getItem("auth_token");
         const headers = token ? { Authorization: `Bearer ${token}` } : {};
-        const res = await axios.get("http://127.0.0.1:8000/api/dashboard", { headers });
+        const res = await axios.get(`${API_BASE_URL}/api/dashboard`, { headers });
         // The Laravel API wraps the payload in a 'data' key, so we need res.data.data
         setDashboardData(res.data.data);
       } catch (error) {
@@ -154,7 +155,7 @@ export default function Dashboard() {
           break;
       }
 
-      const res = await axios.post(`http://127.0.0.1:8000${endpoint}`, payload);
+      const res = await axios.post(`${API_BASE_URL}${endpoint}`, payload);
 
       if (activeAction === "Check Soil pH" && res.data.soil_type) {
         setActionResponse(`**Soil Type:** ${res.data.soil_type}\n\n**Recommendation:**\n${res.data.recommendation}\n\n**Suggested Crops:** ${(res.data.suggested_crops || []).join(", ")}`);

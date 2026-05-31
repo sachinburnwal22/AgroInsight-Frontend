@@ -6,6 +6,7 @@ import { X, Sparkles, ShoppingCart, Info, Check, BrainCircuit } from "lucide-rea
 import axios from "axios";
 import { useCart } from "@/context/CartContext";
 import { useAuth } from "@/context/AuthContext";
+import { API_BASE_URL } from "@/lib/utils";
 
 interface Product {
   id: number;
@@ -47,7 +48,7 @@ export default function ProductModal({ shop, onClose }: ProductModalProps) {
     const fetchProducts = async () => {
       setLoadingProducts(true);
       try {
-        const res = await axios.get(`http://127.0.0.1:8000/api/shops/${shop.id}/products`);
+        const res = await axios.get(`${API_BASE_URL}/api/shops/${shop.id}/products`);
         if (res.data.status === "success") {
           setProducts(res.data.data);
           // Initialize quantity state
@@ -79,7 +80,7 @@ export default function ProductModal({ shop, onClose }: ProductModalProps) {
         const userRegion = user?.region || "Central India";
 
         const res = await axios.post(
-          "http://127.0.0.1:8000/api/market/recommendations",
+          `${API_BASE_URL}/api/market/recommendations`,
           {
             crop: userCrop,
             region: userRegion

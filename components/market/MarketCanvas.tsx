@@ -5,6 +5,7 @@ import { Canvas, useFrame, useThree } from "@react-three/fiber";
 import { useMovement } from "@/hooks/useMovement";
 import ShopStructure from "./ShopStructure";
 import * as THREE from "three";
+import { Html } from "@react-three/drei";
 
 interface Shop {
   id: number;
@@ -20,6 +21,95 @@ interface MarketCanvasProps {
   isNight?: boolean;
   nearShop: Shop | null;
   onNearShopChange: (shop: Shop | null) => void;
+  onlinePlayers?: any[];
+  onPlayerMove?: (x: number, z: number, rotationY: number, animation: 'idle' | 'walking') => void;
+}
+
+// ------------------------------------------------------------------
+// MULTIPLAYER PLAYER AVATAR RENDERER
+// Stylized procedural avatar representing other real farmers in the space.
+// ------------------------------------------------------------------
+function PlayerAvatar({ username, position, rotationY, animation }: { username: string; position: [number, number, number]; rotationY: number; animation: 'idle' | 'walking' }) {
+  const groupRef = useRef<THREE.Group>(null);
+  const leftLegRef = useRef<THREE.Mesh>(null);
+  const rightLegRef = useRef<THREE.Mesh>(null);
+  const leftArmRef = useRef<THREE.Mesh>(null);
+  const rightArmRef = useRef<THREE.Mesh>(null);
+  const headRef = useRef<THREE.Mesh>(null);
+
+  useFrame((state) => {
+    const t = state.clock.getElapsedTime();
+
+    if (animation === "walking") {
+      const swing = Math.sin(t * 8.5) * 0.45;
+      if (leftLegRef.current) leftLegRef.current.rotation.x = swing;
+      if (rightLegRef.current) rightLegRef.current.rotation.x = -swing;
+      if (leftArmRef.current) leftArmRef.current.rotation.x = -swing;
+      if (rightArmRef.current) rightArmRef.current.rotation.x = swing;
+    } else {
+      // Idle subtle breathing swing
+      const breath = Math.sin(t * 2.0) * 0.015;
+      if (groupRef.current) groupRef.current.position.y = position[1] + breath;
+      if (leftLegRef.current) leftLegRef.current.rotation.x = THREE.MathUtils.lerp(leftLegRef.current.rotation.x, 0, 0.1);
+      if (rightLegRef.current) rightLegRef.current.rotation.x = THREE.MathUtils.lerp(rightLegRef.current.rotation.x, 0, 0.1);
+      if (leftArmRef.current) leftArmRef.current.rotation.x = Math.sin(t * 1.5) * 0.05;
+      if (rightArmRef.current) rightArmRef.current.rotation.x = Math.cos(t * 1.5) * 0.05;
+    }
+  });
+
+  return (
+    <group ref={groupRef} position={position} rotation={[0, rotationY, 0]}>
+      {/* Floating Username Label above head */}
+      <Html position={[0, 1.8, 0]} center distanceFactor={14}>
+        <div className="px-2 py-0.5 bg-[#07070f]/90 border border-emerald-500/40 text-[#00d084] font-mono text-[9px] font-black uppercase tracking-wider rounded backdrop-blur-md select-none pointer-events-none whitespace-nowrap shadow-[0_0_10px_rgba(0,208,132,0.15)] flex items-center gap-1">
+          <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-ping" />
+          <span>{username}</span>
+        </div>
+      </Html>
+
+      {/* Torso / Shirt (glowing golden orange shirt to distinguish from NPCs) */}
+      <mesh position={[0, 0.8, 0]} castShadow>
+        <cylinderGeometry args={[0.2, 0.15, 0.7, 8]} />
+        <meshStandardMaterial color="#e67e22" roughness={0.7} />
+      </mesh>
+
+      {/* Head */}
+      <mesh ref={headRef} position={[0, 1.3, 0]} castShadow>
+        <sphereGeometry args={[0.15, 8, 8]} />
+        <meshStandardMaterial color="#fcd5b5" roughness={0.8} />
+      </mesh>
+
+      {/* Straw Hat */}
+      <mesh position={[0, 1.42, 0]}>
+        <coneGeometry args={[0.3, 0.12, 10]} />
+        <meshStandardMaterial color="#f1c40f" roughness={0.9} />
+      </mesh>
+
+      {/* Left Arm */}
+      <mesh ref={leftArmRef} position={[-0.24, 0.9, 0]} rotation={[0, 0, 0.1]}>
+        <cylinderGeometry args={[0.05, 0.04, 0.5, 6]} />
+        <meshStandardMaterial color="#e67e22" roughness={0.7} />
+      </mesh>
+
+      {/* Right Arm */}
+      <mesh ref={rightArmRef} position={[0.24, 0.9, 0]} rotation={[0, 0, -0.1]}>
+        <cylinderGeometry args={[0.05, 0.04, 0.5, 6]} />
+        <meshStandardMaterial color="#e67e22" roughness={0.7} />
+      </mesh>
+
+      {/* Left Leg */}
+      <mesh ref={leftLegRef} position={[-0.1, 0.3, 0]} castShadow>
+        <cylinderGeometry args={[0.06, 0.05, 0.6, 6]} />
+        <meshStandardMaterial color="#2c3e50" roughness={0.9} />
+      </mesh>
+
+      {/* Right Leg */}
+      <mesh ref={rightLegRef} position={[0.1, 0.3, 0]} castShadow>
+        <cylinderGeometry args={[0.06, 0.05, 0.6, 6]} />
+        <meshStandardMaterial color="#2c3e50" roughness={0.9} />
+      </mesh>
+    </group>
+  );
 }
 
 // ------------------------------------------------------------------
@@ -784,9 +874,10 @@ function NPCFarmer({ position, type, outfitColor = "#2471a3", waypoints = [], sp
 interface PlayerControlsProps {
   shops: Shop[];
   onNearShopChange: (shop: Shop | null) => void;
+  onMove?: (x: number, z: number, rotationY: number, animation: 'idle' | 'walking') => void;
 }
 
-function PlayerControls({ shops, onNearShopChange }: PlayerControlsProps) {
+function PlayerControls({ shops, onNearShopChange, onMove }: PlayerControlsProps) {
   const movement = useMovement();
   const { camera, gl } = useThree();
 
@@ -795,6 +886,9 @@ function PlayerControls({ shops, onNearShopChange }: PlayerControlsProps) {
   const isDragging = useRef(false);
   const previousMousePosition = useRef({ x: 0, y: 0 });
   const walkCycle = useRef(0);
+
+  const lastEmitTime = useRef(0);
+  const lastPosition = useRef({ x: 0, z: 0, yaw: 0 });
 
   const moveSpeed = 0.038;
   const damping = 0.85; 
@@ -839,7 +933,7 @@ function PlayerControls({ shops, onNearShopChange }: PlayerControlsProps) {
     };
   }, [camera, gl]);
 
-  useFrame(() => {
+  useFrame((state) => {
     const forwardVec = new THREE.Vector3(
       -Math.sin(rotation.current.yaw),
       0,
@@ -908,6 +1002,30 @@ function PlayerControls({ shops, onNearShopChange }: PlayerControlsProps) {
     if (coordsText) {
       coordsText.innerText = `X: ${camera.position.x.toFixed(1)} | Z: ${camera.position.z.toFixed(1)}`;
     }
+
+    // Sync multiplayer position changes (throttled to 20fps/50ms)
+    if (onMove) {
+      const now = state.clock.getElapsedTime() * 1000;
+      if (now - lastEmitTime.current > 50) {
+        const dx = Math.abs(camera.position.x - lastPosition.current.x);
+        const dz = Math.abs(camera.position.z - lastPosition.current.z);
+        const dyaw = Math.abs(rotation.current.yaw - lastPosition.current.yaw);
+
+        if (dx > 0.005 || dz > 0.005 || dyaw > 0.005) {
+          const speedLen = new THREE.Vector2(velocity.current.x, velocity.current.z).length();
+          const animationState = speedLen > 0.01 ? 'walking' : 'idle';
+          
+          onMove(camera.position.x, camera.position.z, rotation.current.yaw, animationState);
+
+          lastPosition.current = {
+            x: camera.position.x,
+            z: camera.position.z,
+            yaw: rotation.current.yaw
+          };
+          lastEmitTime.current = now;
+        }
+      }
+    }
   });
 
   return null;
@@ -965,7 +1083,9 @@ export default function MarketCanvas({
   onShopClick,
   isNight = true,
   nearShop,
-  onNearShopChange
+  onNearShopChange,
+  onlinePlayers = [],
+  onPlayerMove
 }: MarketCanvasProps) {
   const terrainTexture = useProceduralTerrainTexture();
   const [targetShopId, setTargetShopId] = useState<number | null>(null);
@@ -1276,10 +1396,22 @@ export default function MarketCanvas({
           ) : null;
         })()}
 
+        {/* Render other online player avatars in real-time */}
+        {onlinePlayers.map((player) => (
+          <PlayerAvatar
+            key={player.socketId}
+            username={player.username}
+            position={[player.x, 0, player.z]}
+            rotationY={player.rotationY}
+            animation={player.animation}
+          />
+        ))}
+
         {/* First Person Controls script hook */}
         <PlayerControls 
           shops={shops} 
           onNearShopChange={onNearShopChange} 
+          onMove={onPlayerMove}
         />
       </Canvas>
 
